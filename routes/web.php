@@ -35,7 +35,15 @@ Route::post('/websites/{website}/ssl/toggle', [WebsiteController::class, 'toggle
 Route::get('/websites/{website}/ssl/status', [WebsiteController::class, 'checkSslStatus'])->middleware(['auth'])->name('websites.ssl.status');
 
 // PHP FPM Pools [Admin | User]
+Route::get('/php', [PHPManagerController::class, 'index'])->middleware(['auth', AdminMiddleware::class])->name('php.index');
 Route::get('/php/get-versions', [PHPManagerController::class, 'getVersions'])->middleware(['auth'])->name('php.get-versions');
+Route::get('/php/list', [PHPManagerController::class, 'list'])->middleware(['auth', AdminMiddleware::class])->name('php.list');
+Route::post('/php/install', [PHPManagerController::class, 'install'])->middleware(['auth', AdminMiddleware::class])->name('php.install');
+Route::delete('/php/uninstall', [PHPManagerController::class, 'uninstall'])->middleware(['auth', AdminMiddleware::class])->name('php.uninstall');
+Route::post('/php/service/toggle', [PHPManagerController::class, 'toggleService'])->middleware(['auth', AdminMiddleware::class])->name('php.service.toggle');
+Route::post('/php/service/restart', [PHPManagerController::class, 'restartService'])->middleware(['auth', AdminMiddleware::class])->name('php.service.restart');
+
+
 
 // MySQL management [Admin | User]
 Route::get('/mysql', [MysqlController::class, 'index'])->middleware(['auth'])->name('mysql.index');
