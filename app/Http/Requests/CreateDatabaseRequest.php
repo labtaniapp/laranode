@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\DatabaseDriver;
 use App\Models\Database;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -52,6 +53,11 @@ class CreateDatabaseRequest extends FormRequest
         $prefix = $user->username . '_';
 
         return [
+            'driver' => [
+                'required',
+                'string',
+                Rule::enum(DatabaseDriver::class),
+            ],
             'name' => [
                 'required',
                 'string',

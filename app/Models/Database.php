@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\DatabaseDriver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -15,12 +16,38 @@ class Database extends Model
         'db_password',
         'charset',
         'collation',
+        'driver',
         'user_id',
     ];
 
     protected $casts = [
         'db_password' => 'encrypted',
+        'driver' => DatabaseDriver::class,
     ];
+
+    /**
+     * Check if this database uses MySQL driver.
+     */
+    public function isMySQL(): bool
+    {
+        return $this->driver === DatabaseDriver::MySQL;
+    }
+
+    /**
+     * Check if this database uses PostgreSQL driver.
+     */
+    public function isPostgreSQL(): bool
+    {
+        return $this->driver === DatabaseDriver::PostgreSQL;
+    }
+
+    /**
+     * Get the driver label for display.
+     */
+    public function getDriverLabelAttribute(): string
+    {
+        return $this->driver?->label() ?? 'Unknown';
+    }
 
     /**
      * Get the user that owns the database.

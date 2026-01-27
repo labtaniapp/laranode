@@ -2,13 +2,14 @@
 
 use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DatabaseController;
 use App\Http\Controllers\FilemanagerController;
 use App\Http\Controllers\FirewallController;
+use App\Http\Controllers\MysqlController;
 use App\Http\Controllers\PHPManagerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StatsHistoryController;
 use App\Http\Controllers\WebsiteController;
-use App\Http\Controllers\MysqlController;
 use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -45,12 +46,22 @@ Route::post('/php/service/restart', [PHPManagerController::class, 'restartServic
 
 
 
-// MySQL management [Admin | User]
+// MySQL management (legacy routes - kept for backward compatibility)
 Route::get('/mysql', [MysqlController::class, 'index'])->middleware(['auth'])->name('mysql.index');
 Route::get('/mysql/charsets-collations', [MysqlController::class, 'getCharsetsAndCollations'])->middleware(['auth'])->name('mysql.charsets-collations');
 Route::post('/mysql', [MysqlController::class, 'store'])->middleware(['auth'])->name('mysql.store');
 Route::patch('/mysql', [MysqlController::class, 'update'])->middleware(['auth'])->name('mysql.update');
 Route::delete('/mysql', [MysqlController::class, 'destroy'])->middleware(['auth'])->name('mysql.destroy');
+
+// Database management [Admin | User] - New unified controller for all database drivers
+Route::middleware(['auth'])->group(function () {
+    Route::get('/databases', [DatabaseController::class, 'index'])->name('databases.index');
+    Route::get('/databases/charsets-collations', [DatabaseController::class, 'getCharsetsAndCollations'])->name('databases.charsets-collations');
+    Route::get('/databases/test-connection', [DatabaseController::class, 'testConnection'])->name('databases.test-connection');
+    Route::post('/databases', [DatabaseController::class, 'store'])->name('databases.store');
+    Route::patch('/databases', [DatabaseController::class, 'update'])->name('databases.update');
+    Route::delete('/databases', [DatabaseController::class, 'destroy'])->name('databases.destroy');
+});
 
 // Firewall [Admin]
 Route::middleware(['auth', AdminMiddleware::class])->group(function () {

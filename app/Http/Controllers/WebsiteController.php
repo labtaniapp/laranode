@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\ApplicationType;
 use App\Http\Requests\CreateWebsiteRequest;
 use App\Http\Requests\UpdateWebsitePHPVersionRequest;
+use App\Models\NodeVersion;
 use App\Models\Website;
 use App\Models\PhpVersion;
 use App\Services\Websites\CreateWebsiteService;
@@ -24,7 +26,7 @@ class WebsiteController extends Controller
      */
     public function index(): \Inertia\Response
     {
-        $websites = Website::mine()->with(['user', 'phpVersion'])->orderBy('url')->get();
+        $websites = Website::mine()->with(['user', 'phpVersion', 'nodeVersion'])->orderBy('url')->get();
 
         try {
             $serverIp = Http::get('https://api.ipify.org')->body();
@@ -32,7 +34,16 @@ class WebsiteController extends Controller
             $serverIp = 'N/A';
         }
 
-        return Inertia::render('Websites/Index', compact('websites', 'serverIp'));
+        // Get available application types and versions
+        $applicationTypes = ApplicationType::options();
+        $nodeVersions = NodeVersion::active()->get();
+
+        return Inertia::render('Websites/Index', compact(
+            'websites',
+            'serverIp',
+            'applicationTypes',
+            'nodeVersions'
+        ));
     }
 
     /**
