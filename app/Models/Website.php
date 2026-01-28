@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ApplicationType;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
@@ -14,13 +15,23 @@ class Website extends Model
         'ssl_enabled' => 'boolean',
         'ssl_expires_at' => 'datetime',
         'ssl_generated_at' => 'datetime',
+        'application_type' => ApplicationType::class,
+        'environment_variables' => 'array',
+        'instances' => 'integer',
+        'app_port' => 'integer',
     ];
 
     protected $fillable = [
         'url',
         'document_root',
         'website_root',
+        'application_type',
         'php_version_id',
+        'node_version_id',
+        'startup_file',
+        'app_port',
+        'instances',
+        'environment_variables',
         'ssl_enabled',
         'ssl_status',
         'ssl_expires_at',
@@ -52,6 +63,59 @@ class Website extends Model
     public function phpVersion(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(PhpVersion::class);
+    }
+
+    public function nodeVersion(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    {
+        return $this->belongsTo(NodeVersion::class);
+    }
+
+    /**
+     * Check if this is a PHP application.
+     */
+    public function isPhp(): bool
+    {
+        return $this->application_type === ApplicationType::PHP;
+    }
+
+    /**
+     * Check if this is a Node.js application.
+     */
+    public function isNodeJs(): bool
+    {
+        return $this->application_type === ApplicationType::NodeJS;
+    }
+
+    /**
+     * Check if this is a static site.
+     */
+    public function isStatic(): bool
+    {
+        return $this->application_type === ApplicationType::Static;
+    }
+
+    /**
+     * Check if this application requires a reverse proxy.
+     */
+    public function requiresReverseProxy(): bool
+    {
+        return $this->application_type?->usesReverseProxy() ?? false;
+    }
+
+    /**
+     * Get the application type label for display.
+     */
+    public function getApplicationTypeLabelAttribute(): string
+    {
+        return $this->application_type?->label() ?? 'Unknown';
+    }
+
+    /**
+     * Get the PM2 process name for this site.
+     */
+    public function getPm2ProcessNameAttribute(): string
+    {
+        return str_replace('.', '-', $this->url);
     }
 
     /**

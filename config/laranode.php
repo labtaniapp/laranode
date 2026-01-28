@@ -34,6 +34,16 @@ return [
     */
     'apache_vhost_template' => base_path('laranode-scripts/templates/apache-vhost.template'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Laranode Nginx Templates
+    |--------------------------------------------------------------------------
+    |
+    | Templates for Nginx configurations (reverse proxy and static sites).
+    */
+    'nginx_proxy_template' => base_path('laranode-scripts/templates/nginx-proxy.template'),
+    'nginx_static_template' => base_path('laranode-scripts/templates/nginx-static.template'),
+
 
     /*
     |--------------------------------------------------------------------------

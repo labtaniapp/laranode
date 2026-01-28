@@ -6,11 +6,11 @@ import { toast } from "react-toastify";
 import { router } from '@inertiajs/react'
 import { TbWorldWww } from "react-icons/tb";
 import { MdLock, MdLockOpen } from "react-icons/md";
-import { FaToggleOn, FaToggleOff } from "react-icons/fa";
+import { FaToggleOn, FaToggleOff, FaPhp, FaNodeJs, FaHtml5 } from "react-icons/fa";
 import CreateWebsiteForm from "./Partials/CreateWebsiteForm";
 import { useEffect, useState } from "react";
 
-export default function Websites({ websites, serverIp }) {
+export default function Websites({ websites, serverIp, applicationTypes = [], nodeVersions = [] }) {
 
     const { auth } = usePage().props;
     const [phpVersions, setPhpVersions] = useState([]);
@@ -56,6 +56,45 @@ export default function Websites({ websites, serverIp }) {
         );
     };
 
+    const getApplicationTypeIcon = (type) => {
+        switch (type) {
+            case 'php':
+                return <FaPhp className="w-4 h-4" />;
+            case 'nodejs':
+                return <FaNodeJs className="w-4 h-4" />;
+            case 'static':
+                return <FaHtml5 className="w-4 h-4" />;
+            default:
+                return <FaPhp className="w-4 h-4" />;
+        }
+    };
+
+    const getApplicationTypeLabel = (type) => {
+        switch (type) {
+            case 'php':
+                return 'PHP';
+            case 'nodejs':
+                return 'Node.js';
+            case 'static':
+                return 'Static';
+            default:
+                return 'PHP';
+        }
+    };
+
+    const getApplicationTypeBadgeClass = (type) => {
+        switch (type) {
+            case 'php':
+                return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+            case 'nodejs':
+                return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+            case 'static':
+                return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+            default:
+                return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200';
+        }
+    };
+
     return (
         <AuthenticatedLayout
             header={
@@ -64,7 +103,12 @@ export default function Websites({ websites, serverIp }) {
                         <TbWorldWww className='mr-2' />
                         Websites ({websites.length}/{auth.user.domain_limit || 'unlimited'})
                     </h2>
-                    <CreateWebsiteForm serverIp={serverIp} className="max-w-xl" />
+                    <CreateWebsiteForm
+                        serverIp={serverIp}
+                        applicationTypes={applicationTypes}
+                        nodeVersions={nodeVersions}
+                        className="max-w-xl"
+                    />
                 </div>
             }
         >
@@ -77,9 +121,10 @@ export default function Websites({ websites, serverIp }) {
                         <thead className="text-gray-700 uppercase bg-gray-200 dark:bg-gray-700 dark:text-gray-300 text-sm">
                             <tr>
                                 <th className="px-6 py-3">URL</th>
+                                <th className="px-6 py-3">Type</th>
                                 <th className="px-6 py-3">SSL Status</th>
                                 <th className="px-6 py-3">Document Root</th>
-                                <th className="px-6 py-3">PHP Version</th>
+                                <th className="px-6 py-3">Version</th>
                                 {auth.user.role == 'admin' && (
                                     <th className="px-6 py-3">User</th>
                                 )}
@@ -91,15 +136,23 @@ export default function Websites({ websites, serverIp }) {
                                 <tr key={`website-${index}`} className="bg-white border-b text-gray-700 dark:text-gray-200 dark:bg-gray-850 dark:border-gray-700 border-gray-200">
                                     <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                         <Link href={`${website.ssl_status === 'active' ? 'https' : 'http'}://${website.url}`} target="_blank" className='hover:underline text-blue-600 dark:text-blue-400'>
-                                            <TbWorldWww className='w-4 h-4 inline-flex' /> 
+                                            <TbWorldWww className='w-4 h-4 inline-flex' />
                                             <span className='ml-1'>{website.url}</span>
                                         </Link>
                                     </td>
-                                    
+
+                                    {/* Application Type Badge */}
+                                    <td className="px-6 py-4">
+                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getApplicationTypeBadgeClass(website.application_type)}`}>
+                                            {getApplicationTypeIcon(website.application_type)}
+                                            <span className="ml-1">{getApplicationTypeLabel(website.application_type)}</span>
+                                        </span>
+                                    </td>
+
                                     <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                         <div className={`inline-flex items-center px-3 py-1 rounded-md text-sm font-medium ${
-                                            website.ssl_status === 'active' 
-                                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' 
+                                            website.ssl_status === 'active'
+                                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
                                                 : website.ssl_status === 'expired'
                                                 ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
                                                 : website.ssl_status === 'pending'
@@ -111,7 +164,7 @@ export default function Websites({ websites, serverIp }) {
                                             ) : (
                                                 <MdLockOpen className="w-4 h-4 mr-1" />
                                             )}
-                                            {website.ssl_status === 'active' ? 'SSL Active' : 
+                                            {website.ssl_status === 'active' ? 'SSL Active' :
                                              website.ssl_status === 'expired' ? 'SSL Expired' :
                                              website.ssl_status === 'pending' ? 'SSL Pending' : 'SSL Inactive'}
                                         </div>
@@ -121,30 +174,74 @@ export default function Websites({ websites, serverIp }) {
                                             {website.fullDocumentRoot}
                                         </div>
                                     </td>
-                                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                        <select
-                                            className="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
-                                            value={website.php_version?.id || ''}
-                                            onChange={(e) => {
-                                                const selectedId = e.target.value;
-                                                if (!selectedId) return;
 
-                                                router.patch(route('websites.update', { website: website.id }),
-                                                    { php_version_id: selectedId },
-                                                    {
-                                                        onBefore: () => toast('Updating PHP version...'),
-                                                        onSuccess: () => toast('PHP version updated.'),
-                                                        onError: () => toast('Failed to update PHP version.'),
-                                                    }
-                                                );
-                                            }}
-                                        >
-                                            <option value="" disabled>Choose version</option>
-                                            {phpVersions.map(v => (
-                                                <option key={`phpver-${v.id}`} value={v.id}>{v.version}</option>
-                                            ))}
-                                        </select>
+                                    {/* Version Column - Dynamic based on type */}
+                                    <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
+                                        {website.application_type === 'php' && (
+                                            <select
+                                                className="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                                                value={website.php_version?.id || ''}
+                                                onChange={(e) => {
+                                                    const selectedId = e.target.value;
+                                                    if (!selectedId) return;
+
+                                                    router.patch(route('websites.update', { website: website.id }),
+                                                        { php_version_id: selectedId },
+                                                        {
+                                                            onBefore: () => toast('Updating PHP version...'),
+                                                            onSuccess: () => toast('PHP version updated.'),
+                                                            onError: () => toast('Failed to update PHP version.'),
+                                                        }
+                                                    );
+                                                }}
+                                            >
+                                                <option value="" disabled>Choose version</option>
+                                                {phpVersions.map(v => (
+                                                    <option key={`phpver-${v.id}`} value={v.id}>PHP {v.version}</option>
+                                                ))}
+                                            </select>
+                                        )}
+                                        {website.application_type === 'nodejs' && (
+                                            <div className="flex flex-col">
+                                                <span className="text-sm">
+                                                    Node.js {website.node_version?.version || 'N/A'}
+                                                </span>
+                                                {website.app_port && (
+                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                        Port: {website.app_port}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                        {website.application_type === 'static' && (
+                                            <span className="text-gray-500 dark:text-gray-400 text-sm">—</span>
+                                        )}
+                                        {!website.application_type && (
+                                            <select
+                                                className="bg-gray-100 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-800 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white"
+                                                value={website.php_version?.id || ''}
+                                                onChange={(e) => {
+                                                    const selectedId = e.target.value;
+                                                    if (!selectedId) return;
+
+                                                    router.patch(route('websites.update', { website: website.id }),
+                                                        { php_version_id: selectedId },
+                                                        {
+                                                            onBefore: () => toast('Updating PHP version...'),
+                                                            onSuccess: () => toast('PHP version updated.'),
+                                                            onError: () => toast('Failed to update PHP version.'),
+                                                        }
+                                                    );
+                                                }}
+                                            >
+                                                <option value="" disabled>Choose version</option>
+                                                {phpVersions.map(v => (
+                                                    <option key={`phpver-${v.id}`} value={v.id}>PHP {v.version}</option>
+                                                ))}
+                                            </select>
+                                        )}
                                     </td>
+
                                     {auth.user.role == 'admin' && (
                                         <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
                                             <div>
@@ -160,8 +257,8 @@ export default function Websites({ websites, serverIp }) {
                                             <ConfirmationButton doAction={() => toggleSsl(website)}>
                                                 <button
                                                 className={`p-2 rounded-lg transition-colors ${
-                                                    website.ssl_enabled 
-                                                        ? 'bg-green-100 hover:bg-green-200 text-green-600 dark:bg-green-900 dark:hover:bg-green-800 dark:text-green-300' 
+                                                    website.ssl_enabled
+                                                        ? 'bg-green-100 hover:bg-green-200 text-green-600 dark:bg-green-900 dark:hover:bg-green-800 dark:text-green-300'
                                                         : 'bg-gray-100 hover:bg-gray-200 text-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-400'
                                                 }`}
                                                 title={website.ssl_enabled ? 'Disable SSL' : 'Enable SSL'}
@@ -189,4 +286,3 @@ export default function Websites({ websites, serverIp }) {
         </AuthenticatedLayout>
     );
 }
-
