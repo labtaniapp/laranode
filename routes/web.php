@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AccountsController;
+use App\Http\Controllers\AdminerController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DatabaseController;
 use App\Http\Controllers\FilemanagerController;
@@ -61,6 +62,13 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/databases', [DatabaseController::class, 'store'])->name('databases.store');
     Route::patch('/databases', [DatabaseController::class, 'update'])->name('databases.update');
     Route::delete('/databases', [DatabaseController::class, 'destroy'])->name('databases.destroy');
+});
+
+// Adminer - Database Client [Admin | User]
+Route::middleware(['auth'])->group(function () {
+    Route::get('/adminer/connect/{database}', [AdminerController::class, 'connect'])->name('adminer.connect');
+    Route::get('/adminer/launch', [AdminerController::class, 'launch'])->name('adminer.launch');
+    Route::get('/adminer/disconnect', [AdminerController::class, 'disconnect'])->name('adminer.disconnect');
 });
 
 // Firewall [Admin]

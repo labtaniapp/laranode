@@ -1,6 +1,6 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
-import { Head, router, usePage } from '@inertiajs/react';
-import { TbDatabase } from 'react-icons/tb';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { TbDatabase, TbExternalLink } from 'react-icons/tb';
 import { TiDelete } from 'react-icons/ti';
 import { SiMysql, SiPostgresql } from 'react-icons/si';
 import { toast } from 'react-toastify';
@@ -115,7 +115,18 @@ export default function DatabasesIndex({ databases = [], availableDrivers = [], 
                                         {db.collation || '—'}
                                     </td>
                                     <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">
-                                        <div className='flex items-center space-x-2'>
+                                        <div className='flex items-center space-x-3'>
+                                            {/* Open in Adminer */}
+                                            <a
+                                                href={route('adminer.connect', { database: db.id })}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-md bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-900 dark:text-indigo-200 dark:hover:bg-indigo-800 transition-colors"
+                                                title="Open in Database Manager"
+                                            >
+                                                <TbExternalLink className="w-4 h-4 mr-1" />
+                                                Open
+                                            </a>
                                             <EditDatabaseForm database={db} />
                                             <ConfirmationButton doAction={() => deleteDb(db.id)}>
                                                 <TiDelete className='w-6 h-6 text-red-500 cursor-pointer hover:text-red-700' />
