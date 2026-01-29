@@ -6,12 +6,10 @@ import { router } from '@inertiajs/react';
 import { toast } from 'react-toastify';
 import { SiNodedotjs } from 'react-icons/si';
 
-export default function InstallNodeForm({ onInstalled }) {
+export default function InstallNodeForm({ onInstalled, availableVersions = [] }) {
     const [showModal, setShowModal] = useState(false);
     const [version, setVersion] = useState('');
     const [isInstalling, setIsInstalling] = useState(false);
-
-    const availableVersions = ['22', '21', '20', '18', '16'];
 
     const handleInstall = () => {
         if (!version) {
@@ -71,8 +69,8 @@ export default function InstallNodeForm({ onInstalled }) {
                         >
                             <option value="">Select a version</option>
                             {availableVersions.map((v) => (
-                                <option key={v} value={v}>
-                                    Node.js {v}.x {v === '20' || v === '18' ? '(LTS)' : ''}
+                                <option key={v.id || v.version} value={v.version}>
+                                    {v.label || `Node.js ${v.version}.x`} {v.is_lts && '(LTS)'}
                                 </option>
                             ))}
                         </select>

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 class Website extends Model
 {
 
-    protected $appends = ['fullDocumentRoot'];
+    protected $appends = ['fullDocumentRoot', 'basePath'];
 
     protected $casts = [
         'ssl_enabled' => 'boolean',
@@ -49,6 +49,14 @@ class Website extends Model
         return $this->user?->homedir . '/domains/' . $this->url . $this->document_root;
     }
 
+    /**
+     * Get the base path for the website (alias for website_root).
+     */
+    public function getBasePathAttribute(): string
+    {
+        return $this->user?->homedir . '/domains/' . $this->url;
+    }
+
     public function scopeMine(Builder $query): Builder
     {
         $user = auth()->user();
@@ -76,6 +84,14 @@ class Website extends Model
     public function databases(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
         return $this->hasMany(Database::class);
+    }
+
+    /**
+     * Get the cron jobs associated with this website.
+     */
+    public function cronJobs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(CronJob::class);
     }
 
     /**

@@ -33,9 +33,19 @@ Route::get('/accounts/impersonate/{user}', [AccountsController::class, 'imperson
 Route::get('/accounts/leave-impersonation', [AccountsController::class, 'leaveImpersonation'])->middleware(['auth'])->name('accounts.leaveImpersonation');
 
 // Websites [Admin | User]
-Route::resource('/websites', WebsiteController::class)->middleware(['auth'])->except(['create', 'edit', 'show']);
+Route::resource('/websites', WebsiteController::class)->middleware(['auth'])->except(['create', 'edit']);
 Route::post('/websites/{website}/ssl/toggle', [WebsiteController::class, 'toggleSsl'])->middleware(['auth'])->name('websites.ssl.toggle');
 Route::get('/websites/{website}/ssl/status', [WebsiteController::class, 'checkSslStatus'])->middleware(['auth'])->name('websites.ssl.status');
+Route::patch('/websites/{website}/settings', [WebsiteController::class, 'updateSettings'])->middleware(['auth'])->name('websites.settings.update');
+
+// Cron Jobs [Admin | User]
+Route::middleware(['auth'])->prefix('websites/{website}/cron-jobs')->group(function () {
+    Route::get('/', [WebsiteController::class, 'getCronJobs'])->name('websites.cron-jobs.index');
+    Route::post('/', [WebsiteController::class, 'storeCronJob'])->name('websites.cron-jobs.store');
+    Route::patch('/{cronJob}', [WebsiteController::class, 'updateCronJob'])->name('websites.cron-jobs.update');
+    Route::delete('/{cronJob}', [WebsiteController::class, 'destroyCronJob'])->name('websites.cron-jobs.destroy');
+    Route::post('/{cronJob}/toggle', [WebsiteController::class, 'toggleCronJob'])->name('websites.cron-jobs.toggle');
+});
 
 // PHP FPM Pools [Admin | User]
 Route::get('/php', [PHPManagerController::class, 'index'])->middleware(['auth', AdminMiddleware::class])->name('php.index');
@@ -67,6 +77,12 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('runtimes')->group(f
     // PM2 routes
     Route::get('/pm2/list', [RuntimeManagerController::class, 'listPm2'])->name('runtimes.pm2.list');
     Route::post('/pm2/restart', [RuntimeManagerController::class, 'restartPm2'])->name('runtimes.pm2.restart');
+
+    // Available versions management (Admin UI to add/remove available versions)
+    Route::get('/available', [RuntimeManagerController::class, 'getAvailableVersions'])->name('runtimes.available.index');
+    Route::post('/available', [RuntimeManagerController::class, 'storeAvailableVersion'])->name('runtimes.available.store');
+    Route::patch('/available', [RuntimeManagerController::class, 'updateAvailableVersion'])->name('runtimes.available.update');
+    Route::delete('/available', [RuntimeManagerController::class, 'destroyAvailableVersion'])->name('runtimes.available.destroy');
 });
 
 // MySQL management (legacy routes - kept for backward compatibility)

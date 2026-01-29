@@ -4,15 +4,18 @@ import { useState } from 'react';
 import { FaPhp } from 'react-icons/fa6';
 import { SiNodedotjs } from 'react-icons/si';
 import { TbSettings } from 'react-icons/tb';
+import { MdSettings } from 'react-icons/md';
 import PhpTab from './Partials/PhpTab';
 import NodeTab from './Partials/NodeTab';
+import SettingsTab from './Partials/SettingsTab';
 
-export default function RuntimesIndex({ runtimeTypes }) {
+export default function RuntimesIndex({ runtimeTypes, availablePhpVersions, availableNodeVersions }) {
     const [activeTab, setActiveTab] = useState('php');
 
     const tabs = [
         { id: 'php', label: 'PHP', icon: FaPhp },
         { id: 'nodejs', label: 'Node.js', icon: SiNodedotjs },
+        { id: 'settings', label: 'Available Versions', icon: MdSettings },
     ];
 
     return (
@@ -56,8 +59,9 @@ export default function RuntimesIndex({ runtimeTypes }) {
 
                 {/* Tab Content */}
                 <div className="mt-6">
-                    {activeTab === 'php' && <PhpTab />}
-                    {activeTab === 'nodejs' && <NodeTab />}
+                    {activeTab === 'php' && <PhpTab availableVersions={availablePhpVersions} />}
+                    {activeTab === 'nodejs' && <NodeTab availableVersions={availableNodeVersions} />}
+                    {activeTab === 'settings' && <SettingsTab />}
                 </div>
             </div>
         </AuthenticatedLayout>

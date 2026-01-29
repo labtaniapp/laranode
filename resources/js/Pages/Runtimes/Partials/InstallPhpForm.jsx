@@ -6,12 +6,10 @@ import { router } from '@inertiajs/react';
 import { toast } from 'react-toastify';
 import { FaPhp } from 'react-icons/fa6';
 
-export default function InstallPhpForm({ onInstalled }) {
+export default function InstallPhpForm({ onInstalled, availableVersions = [] }) {
     const [showModal, setShowModal] = useState(false);
     const [version, setVersion] = useState('');
     const [isInstalling, setIsInstalling] = useState(false);
-
-    const availableVersions = ['8.4', '8.3', '8.2', '8.1', '8.0', '7.4'];
 
     const handleInstall = () => {
         if (!version) {
@@ -71,8 +69,8 @@ export default function InstallPhpForm({ onInstalled }) {
                         >
                             <option value="">Select a version</option>
                             {availableVersions.map((v) => (
-                                <option key={v} value={v}>
-                                    PHP {v}
+                                <option key={v.id || v.version} value={v.version}>
+                                    {v.label || `PHP ${v.version}`} {v.is_lts && '(LTS)'}
                                 </option>
                             ))}
                         </select>

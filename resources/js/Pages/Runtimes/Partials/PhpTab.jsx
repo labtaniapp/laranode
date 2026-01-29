@@ -7,7 +7,7 @@ import ConfirmationButton from '@/Components/ConfirmationButton';
 import { useEffect, useState } from 'react';
 import InstallPhpForm from './InstallPhpForm';
 
-export default function PhpTab() {
+export default function PhpTab({ availableVersions = [] }) {
     const [phpVersions, setPhpVersions] = useState([]);
     const [liveStats, setLiveStats] = useState({});
     const [loading, setLoading] = useState(true);
@@ -107,7 +107,7 @@ export default function PhpTab() {
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                     Manage PHP versions installed on your server. Each version runs as a separate PHP-FPM service.
                 </p>
-                <InstallPhpForm onInstalled={fetchPhpVersions} />
+                <InstallPhpForm onInstalled={fetchPhpVersions} availableVersions={availableVersions} />
             </div>
 
             <div className="relative overflow-x-auto bg-white dark:bg-gray-850 rounded-lg shadow">
