@@ -199,6 +199,66 @@ class SystemStatsService
         return $phpFpmStatuses;
     }
     /**
+     * Fetch PM2 processes status.
+     */
+    public function getPm2Status(): array
+    {
+        $output = Process::run('pm2 jlist 2>/dev/null')->output();
+        $processes = json_decode($output, true) ?? [];
+
+        $pm2Stats = [];
+
+        foreach ($processes as $process) {
+            $pm2Stats[$process['name'] ?? 'unknown'] = [
+                'pid' => $process['pid'] ?? 0,
+                'status' => $process['pm2_env']['status'] ?? 'unknown',
+                'memory' => isset($process['monit']['memory'])
+                    ? $this->formatBytes($process['monit']['memory'])
+                    : '0 MB',
+                'cpu' => ($process['monit']['cpu'] ?? 0) . '%',
+                'uptime' => isset($process['pm2_env']['pm_uptime'])
+                    ? $this->formatUptime($process['pm2_env']['pm_uptime'])
+                    : '--',
+                'restarts' => $process['pm2_env']['restart_time'] ?? 0,
+            ];
+        }
+
+        return $pm2Stats;
+    }
+
+    /**
+     * Format bytes to human readable format.
+     */
+    private function formatBytes(int $bytes): string
+    {
+        if ($bytes >= 1073741824) {
+            return round($bytes / 1073741824, 2) . ' GB';
+        } elseif ($bytes >= 1048576) {
+            return round($bytes / 1048576, 2) . ' MB';
+        } elseif ($bytes >= 1024) {
+            return round($bytes / 1024, 2) . ' KB';
+        }
+        return $bytes . ' B';
+    }
+
+    /**
+     * Format PM2 uptime timestamp to human readable format.
+     */
+    private function formatUptime(int $timestamp): string
+    {
+        $seconds = (time() * 1000 - $timestamp) / 1000;
+
+        if ($seconds < 60) {
+            return round($seconds) . 's';
+        } elseif ($seconds < 3600) {
+            return round($seconds / 60) . 'm';
+        } elseif ($seconds < 86400) {
+            return round($seconds / 3600) . 'h';
+        }
+        return round($seconds / 86400) . 'd';
+    }
+
+    /**
      * Fetch SSL (Let's Encrypt) status.
      */
     public function getSslStatus(): string
@@ -297,6 +357,7 @@ class SystemStatsService
             'apache'           => $this->getApacheStatus(),
             'mysql'            => $this->getMysqlStatus(),
             'network'          => $this->getNetworkStats(),
+            'pm2'              => $this->getPm2Status(),
             'domainCount'      => rand(1, 100),
             'userCount'        => $this->getUserCount(),
         ];

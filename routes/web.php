@@ -47,6 +47,13 @@ Route::middleware(['auth'])->prefix('websites/{website}/cron-jobs')->group(funct
     Route::post('/{cronJob}/toggle', [WebsiteController::class, 'toggleCronJob'])->name('websites.cron-jobs.toggle');
 });
 
+// Logs [Admin | User]
+Route::middleware(['auth'])->prefix('websites/{website}/logs')->group(function () {
+    Route::get('/', [WebsiteController::class, 'getLogFiles'])->name('websites.logs.index');
+    Route::get('/content', [WebsiteController::class, 'getLogContent'])->name('websites.logs.content');
+    Route::post('/clear', [WebsiteController::class, 'clearLog'])->name('websites.logs.clear');
+});
+
 // PHP FPM Pools [Admin | User]
 Route::get('/php', [PHPManagerController::class, 'index'])->middleware(['auth', AdminMiddleware::class])->name('php.index');
 Route::get('/php/get-versions', [PHPManagerController::class, 'getVersions'])->middleware(['auth'])->name('php.get-versions');

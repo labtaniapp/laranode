@@ -9,6 +9,7 @@ import DiskLive from './Components/DiskLive';
 import NetworkLive from './Components/NetworkLive';
 import MySQLLive from './Components/MySQLLive';
 import PHPFPMLive from './Components/PHPFPMLive';
+import PM2Live from './Components/PM2Live';
 
 
 export default function Dashboard() {
@@ -78,6 +79,7 @@ export default function Dashboard() {
                     <div className="mt-5 w-full grid grid-cols-1 xl:grid-cols-4 gap-4">
                         <MySQLLive mysqlStats={liveStats.mysql} />
                         <PHPFPMLive phpStats={liveStats.phpFpm} />
+                        <PM2Live pm2Stats={liveStats.pm2} />
                     </div>
 
                 </div>
