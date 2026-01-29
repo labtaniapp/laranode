@@ -74,6 +74,7 @@ class CreateDatabaseRequest extends FormRequest
             'db_pass' => ['required', 'string', 'min:8'],
             'charset' => ['required', 'string'],
             'collation' => ['required', 'string'],
+            'website_id' => ['nullable', 'integer', 'exists:websites,id'],
         ];
     }
 

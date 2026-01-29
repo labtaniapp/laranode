@@ -71,6 +71,14 @@ class Website extends Model
     }
 
     /**
+     * Get the databases associated with this website.
+     */
+    public function databases(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Database::class);
+    }
+
+    /**
      * Check if this is a PHP application.
      */
     public function isPhp(): bool

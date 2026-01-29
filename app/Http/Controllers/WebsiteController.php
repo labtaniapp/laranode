@@ -26,7 +26,10 @@ class WebsiteController extends Controller
      */
     public function index(): \Inertia\Response
     {
-        $websites = Website::mine()->with(['user', 'phpVersion', 'nodeVersion'])->orderBy('url')->get();
+        $websites = Website::mine()
+            ->with(['user', 'phpVersion', 'nodeVersion', 'databases'])
+            ->orderBy('url')
+            ->get();
 
         try {
             $serverIp = Http::get('https://api.ipify.org')->body();
