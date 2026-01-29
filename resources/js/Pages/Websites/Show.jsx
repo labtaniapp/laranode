@@ -1,16 +1,20 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
-import { TbWorldWww, TbArrowLeft, TbClock, TbInfoCircle, TbDatabase } from 'react-icons/tb';
+import { TbWorldWww, TbArrowLeft, TbClock, TbInfoCircle, TbDatabase, TbFolder } from 'react-icons/tb';
 import { FaPhp, FaNodeJs, FaHtml5 } from 'react-icons/fa';
 import OverviewTab from './Partials/OverviewTab';
 import CronJobsTab from './Partials/CronJobsTab';
+import DatabasesTab from './Partials/DatabasesTab';
+import FileManagerTab from './Partials/FileManagerTab';
 
-export default function WebsiteShow({ website, cronJobs, cronTemplates }) {
+export default function WebsiteShow({ website, cronJobs, cronTemplates, phpVersions = [], nodeVersions = [] }) {
     const [activeTab, setActiveTab] = useState('overview');
 
     const tabs = [
         { id: 'overview', label: 'Overview', icon: TbInfoCircle },
+        { id: 'files', label: 'File Manager', icon: TbFolder },
+        { id: 'databases', label: 'Databases', icon: TbDatabase, count: website.databases?.length || 0 },
         { id: 'cron', label: 'Cron Jobs', icon: TbClock, count: cronJobs?.length || 0 },
     ];
 
@@ -67,7 +71,7 @@ export default function WebsiteShow({ website, cronJobs, cronTemplates }) {
             <div className="max-w-7xl px-4 my-8">
                 {/* Tabs */}
                 <div className="border-b border-gray-200 dark:border-gray-700">
-                    <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+                    <nav className="-mb-px flex space-x-8 overflow-x-auto" aria-label="Tabs">
                         {tabs.map((tab) => {
                             const Icon = tab.icon;
                             return (
@@ -75,7 +79,7 @@ export default function WebsiteShow({ website, cronJobs, cronTemplates }) {
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`
-                                        flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors
+                                        flex items-center py-4 px-1 border-b-2 font-medium text-sm transition-colors whitespace-nowrap
                                         ${activeTab === tab.id
                                             ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
                                             : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
@@ -101,7 +105,15 @@ export default function WebsiteShow({ website, cronJobs, cronTemplates }) {
 
                 {/* Tab Content */}
                 <div className="mt-6">
-                    {activeTab === 'overview' && <OverviewTab website={website} />}
+                    {activeTab === 'overview' && (
+                        <OverviewTab website={website} phpVersions={phpVersions} nodeVersions={nodeVersions} />
+                    )}
+                    {activeTab === 'files' && (
+                        <FileManagerTab website={website} />
+                    )}
+                    {activeTab === 'databases' && (
+                        <DatabasesTab website={website} />
+                    )}
                     {activeTab === 'cron' && (
                         <CronJobsTab
                             website={website}

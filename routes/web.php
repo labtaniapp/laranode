@@ -36,6 +36,7 @@ Route::get('/accounts/leave-impersonation', [AccountsController::class, 'leaveIm
 Route::resource('/websites', WebsiteController::class)->middleware(['auth'])->except(['create', 'edit']);
 Route::post('/websites/{website}/ssl/toggle', [WebsiteController::class, 'toggleSsl'])->middleware(['auth'])->name('websites.ssl.toggle');
 Route::get('/websites/{website}/ssl/status', [WebsiteController::class, 'checkSslStatus'])->middleware(['auth'])->name('websites.ssl.status');
+Route::patch('/websites/{website}/settings', [WebsiteController::class, 'updateSettings'])->middleware(['auth'])->name('websites.settings.update');
 
 // Cron Jobs [Admin | User]
 Route::middleware(['auth'])->prefix('websites/{website}/cron-jobs')->group(function () {
