@@ -67,6 +67,12 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('runtimes')->group(f
     // PM2 routes
     Route::get('/pm2/list', [RuntimeManagerController::class, 'listPm2'])->name('runtimes.pm2.list');
     Route::post('/pm2/restart', [RuntimeManagerController::class, 'restartPm2'])->name('runtimes.pm2.restart');
+
+    // Available versions management (Admin UI to add/remove available versions)
+    Route::get('/available', [RuntimeManagerController::class, 'getAvailableVersions'])->name('runtimes.available.index');
+    Route::post('/available', [RuntimeManagerController::class, 'storeAvailableVersion'])->name('runtimes.available.store');
+    Route::patch('/available', [RuntimeManagerController::class, 'updateAvailableVersion'])->name('runtimes.available.update');
+    Route::delete('/available', [RuntimeManagerController::class, 'destroyAvailableVersion'])->name('runtimes.available.destroy');
 });
 
 // MySQL management (legacy routes - kept for backward compatibility)

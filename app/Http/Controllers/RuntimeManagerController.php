@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\RuntimeType;
 use App\Models\PhpVersion;
 use App\Models\NodeVersion;
+use App\Models\RuntimeAvailableVersion;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -17,6 +18,98 @@ class RuntimeManagerController extends Controller
     {
         return inertia('Runtimes/Index', [
             'runtimeTypes' => RuntimeType::options(),
+            'availablePhpVersions' => RuntimeAvailableVersion::phpVersions(),
+            'availableNodeVersions' => RuntimeAvailableVersion::nodeVersions(),
+        ]);
+    }
+
+    // =====================
+    // Available Versions Management (Admin UI)
+    // =====================
+
+    /**
+     * Get all available versions for a type
+     */
+    public function getAvailableVersions(Request $request): JsonResponse
+    {
+        $type = $request->input('type');
+
+        $query = RuntimeAvailableVersion::ordered();
+
+        if ($type) {
+            $query->ofType($type);
+        }
+
+        return response()->json($query->get());
+    }
+
+    /**
+     * Add a new available version
+     */
+    public function storeAvailableVersion(Request $request): JsonResponse
+    {
+        $request->validate([
+            'type' => 'required|in:php,nodejs',
+            'version' => 'required|string|max:10',
+            'label' => 'nullable|string|max:50',
+            'is_lts' => 'boolean',
+            'is_active' => 'boolean',
+            'sort_order' => 'integer',
+        ]);
+
+        $version = RuntimeAvailableVersion::create([
+            'type' => $request->input('type'),
+            'version' => $request->input('version'),
+            'label' => $request->input('label'),
+            'is_lts' => $request->input('is_lts', false),
+            'is_active' => $request->input('is_active', true),
+            'sort_order' => $request->input('sort_order', 0),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Version added successfully',
+            'version' => $version,
+        ]);
+    }
+
+    /**
+     * Update an available version
+     */
+    public function updateAvailableVersion(Request $request): JsonResponse
+    {
+        $request->validate([
+            'id' => 'required|exists:runtime_available_versions,id',
+            'label' => 'nullable|string|max:50',
+            'is_lts' => 'boolean',
+            'is_active' => 'boolean',
+            'sort_order' => 'integer',
+        ]);
+
+        $version = RuntimeAvailableVersion::findOrFail($request->input('id'));
+        $version->update($request->only(['label', 'is_lts', 'is_active', 'sort_order']));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Version updated successfully',
+            'version' => $version,
+        ]);
+    }
+
+    /**
+     * Delete an available version
+     */
+    public function destroyAvailableVersion(Request $request): JsonResponse
+    {
+        $request->validate([
+            'id' => 'required|exists:runtime_available_versions,id',
+        ]);
+
+        RuntimeAvailableVersion::destroy($request->input('id'));
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Version removed successfully',
         ]);
     }
 

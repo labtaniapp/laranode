@@ -7,7 +7,7 @@ import ConfirmationButton from '@/Components/ConfirmationButton';
 import { useEffect, useState } from 'react';
 import InstallNodeForm from './InstallNodeForm';
 
-export default function NodeTab() {
+export default function NodeTab({ availableVersions = [] }) {
     const [nodeVersions, setNodeVersions] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -70,7 +70,7 @@ export default function NodeTab() {
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                     Manage Node.js versions via NVM. Each version can be used for Node.js applications managed by PM2.
                 </p>
-                <InstallNodeForm onInstalled={fetchNodeVersions} />
+                <InstallNodeForm onInstalled={fetchNodeVersions} availableVersions={availableVersions} />
             </div>
 
             <div className="relative overflow-x-auto bg-white dark:bg-gray-850 rounded-lg shadow">
