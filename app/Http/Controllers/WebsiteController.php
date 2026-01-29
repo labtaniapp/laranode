@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\ApplicationType;
 use App\Http\Requests\CreateWebsiteRequest;
 use App\Http\Requests\UpdateWebsitePHPVersionRequest;
+use App\Models\CronJob;
 use App\Models\NodeVersion;
 use App\Models\Website;
 use App\Models\PhpVersion;
@@ -46,6 +47,28 @@ class WebsiteController extends Controller
             'serverIp',
             'applicationTypes',
             'nodeVersions'
+        ));
+    }
+
+    /**
+     * Display the specified website with tabs (Overview, Cron Jobs, etc.)
+     */
+    public function show(Website $website): \Inertia\Response
+    {
+        Gate::authorize('view', $website);
+
+        $website->load(['user', 'phpVersion', 'nodeVersion', 'databases']);
+
+        $cronJobs = CronJob::forWebsite($website->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $cronTemplates = CronJob::templates();
+
+        return Inertia::render('Websites/Show', compact(
+            'website',
+            'cronJobs',
+            'cronTemplates'
         ));
     }
 
@@ -149,6 +172,175 @@ class WebsiteController extends Controller
                 'success' => false,
                 'message' => 'Failed to check SSL status: ' . $e->getMessage()
             ], 500);
+        }
+    }
+
+    // =====================
+    // Cron Job Management
+    // =====================
+
+    /**
+     * Get cron jobs for a website
+     */
+    public function getCronJobs(Website $website)
+    {
+        Gate::authorize('view', $website);
+
+        $cronJobs = CronJob::forWebsite($website->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json($cronJobs);
+    }
+
+    /**
+     * Store a new cron job for a website
+     */
+    public function storeCronJob(Request $request, Website $website)
+    {
+        Gate::authorize('update', $website);
+
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'minute' => 'required|string|max:20',
+            'hour' => 'required|string|max:20',
+            'day' => 'required|string|max:20',
+            'month' => 'required|string|max:20',
+            'weekday' => 'required|string|max:20',
+            'command' => 'required|string|max:1000',
+        ]);
+
+        $cronJob = CronJob::create([
+            'website_id' => $website->id,
+            'user_id' => $request->user()->id,
+            'name' => $validated['name'],
+            'minute' => $validated['minute'],
+            'hour' => $validated['hour'],
+            'day' => $validated['day'],
+            'month' => $validated['month'],
+            'weekday' => $validated['weekday'],
+            'command' => $validated['command'],
+            'is_active' => true,
+        ]);
+
+        // Sync crontab for user
+        $this->syncUserCrontab($request->user());
+
+        session()->flash('success', 'Cron job created successfully.');
+
+        return redirect()->route('websites.show', $website);
+    }
+
+    /**
+     * Update an existing cron job
+     */
+    public function updateCronJob(Request $request, Website $website, CronJob $cronJob)
+    {
+        Gate::authorize('update', $website);
+
+        // Ensure cron job belongs to website
+        if ($cronJob->website_id !== $website->id) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:255',
+            'minute' => 'required|string|max:20',
+            'hour' => 'required|string|max:20',
+            'day' => 'required|string|max:20',
+            'month' => 'required|string|max:20',
+            'weekday' => 'required|string|max:20',
+            'command' => 'required|string|max:1000',
+        ]);
+
+        $cronJob->update($validated);
+
+        // Sync crontab for user
+        $this->syncUserCrontab($request->user());
+
+        session()->flash('success', 'Cron job updated successfully.');
+
+        return redirect()->route('websites.show', $website);
+    }
+
+    /**
+     * Delete a cron job
+     */
+    public function destroyCronJob(Request $request, Website $website, CronJob $cronJob)
+    {
+        Gate::authorize('update', $website);
+
+        // Ensure cron job belongs to website
+        if ($cronJob->website_id !== $website->id) {
+            abort(404);
+        }
+
+        $cronJob->delete();
+
+        // Sync crontab for user
+        $this->syncUserCrontab($request->user());
+
+        session()->flash('success', 'Cron job deleted successfully.');
+
+        return redirect()->route('websites.show', $website);
+    }
+
+    /**
+     * Toggle cron job active status
+     */
+    public function toggleCronJob(Request $request, Website $website, CronJob $cronJob)
+    {
+        Gate::authorize('update', $website);
+
+        // Ensure cron job belongs to website
+        if ($cronJob->website_id !== $website->id) {
+            abort(404);
+        }
+
+        $cronJob->update([
+            'is_active' => !$cronJob->is_active,
+        ]);
+
+        // Sync crontab for user
+        $this->syncUserCrontab($request->user());
+
+        return response()->json([
+            'success' => true,
+            'is_active' => $cronJob->is_active,
+            'message' => $cronJob->is_active ? 'Cron job activated' : 'Cron job deactivated',
+        ]);
+    }
+
+    /**
+     * Sync all active cron jobs to user's crontab
+     */
+    private function syncUserCrontab($user): void
+    {
+        // Get all active cron jobs for this user
+        $cronJobs = CronJob::where('user_id', $user->id)
+            ->active()
+            ->get();
+
+        // Build crontab content
+        $crontabLines = ["# LaraNode Cron Jobs - User: {$user->username}", "# DO NOT EDIT MANUALLY"];
+
+        foreach ($cronJobs as $job) {
+            $crontabLines[] = "# Website: {$job->website->url}" . ($job->name ? " - {$job->name}" : "");
+            $crontabLines[] = $job->toCrontabLine();
+        }
+
+        $crontabContent = implode("\n", $crontabLines) . "\n";
+
+        // Write to user's crontab
+        $scriptPath = base_path('laranode-scripts/bin/laranode-sync-crontab.sh');
+
+        if (file_exists($scriptPath)) {
+            $tempFile = tempnam(sys_get_temp_dir(), 'crontab_');
+            file_put_contents($tempFile, $crontabContent);
+
+            shell_exec("sudo bash {$scriptPath} {$user->username} {$tempFile} 2>&1");
+
+            unlink($tempFile);
         }
     }
 }

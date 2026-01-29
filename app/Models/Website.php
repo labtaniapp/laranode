@@ -79,6 +79,14 @@ class Website extends Model
     }
 
     /**
+     * Get the cron jobs associated with this website.
+     */
+    public function cronJobs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(CronJob::class);
+    }
+
+    /**
      * Check if this is a PHP application.
      */
     public function isPhp(): bool
