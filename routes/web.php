@@ -8,6 +8,7 @@ use App\Http\Controllers\FilemanagerController;
 use App\Http\Controllers\FirewallController;
 use App\Http\Controllers\MysqlController;
 use App\Http\Controllers\PHPManagerController;
+use App\Http\Controllers\RuntimeManagerController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\StatsHistoryController;
 use App\Http\Controllers\WebsiteController;
@@ -45,7 +46,28 @@ Route::delete('/php/uninstall', [PHPManagerController::class, 'uninstall'])->mid
 Route::post('/php/service/toggle', [PHPManagerController::class, 'toggleService'])->middleware(['auth', AdminMiddleware::class])->name('php.service.toggle');
 Route::post('/php/service/restart', [PHPManagerController::class, 'restartService'])->middleware(['auth', AdminMiddleware::class])->name('php.service.restart');
 
+// Runtime Manager [Admin] - Unified PHP & Node.js management
+Route::middleware(['auth', AdminMiddleware::class])->prefix('runtimes')->group(function () {
+    Route::get('/', [RuntimeManagerController::class, 'index'])->name('runtimes.index');
+    Route::get('/versions', [RuntimeManagerController::class, 'getVersions'])->withoutMiddleware(AdminMiddleware::class)->name('runtimes.versions');
 
+    // PHP routes
+    Route::get('/php/list', [RuntimeManagerController::class, 'listPhp'])->name('runtimes.php.list');
+    Route::post('/php/install', [RuntimeManagerController::class, 'installPhp'])->name('runtimes.php.install');
+    Route::delete('/php/uninstall', [RuntimeManagerController::class, 'uninstallPhp'])->name('runtimes.php.uninstall');
+    Route::post('/php/toggle', [RuntimeManagerController::class, 'togglePhpService'])->name('runtimes.php.toggle');
+    Route::post('/php/restart', [RuntimeManagerController::class, 'restartPhpService'])->name('runtimes.php.restart');
+
+    // Node.js routes
+    Route::get('/node/list', [RuntimeManagerController::class, 'listNode'])->name('runtimes.node.list');
+    Route::post('/node/install', [RuntimeManagerController::class, 'installNode'])->name('runtimes.node.install');
+    Route::delete('/node/uninstall', [RuntimeManagerController::class, 'uninstallNode'])->name('runtimes.node.uninstall');
+    Route::post('/node/default', [RuntimeManagerController::class, 'setDefaultNode'])->name('runtimes.node.default');
+
+    // PM2 routes
+    Route::get('/pm2/list', [RuntimeManagerController::class, 'listPm2'])->name('runtimes.pm2.list');
+    Route::post('/pm2/restart', [RuntimeManagerController::class, 'restartPm2'])->name('runtimes.pm2.restart');
+});
 
 // MySQL management (legacy routes - kept for backward compatibility)
 Route::get('/mysql', [MysqlController::class, 'index'])->middleware(['auth'])->name('mysql.index');
