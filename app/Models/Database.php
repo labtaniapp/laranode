@@ -18,6 +18,7 @@ class Database extends Model
         'collation',
         'driver',
         'user_id',
+        'website_id',
     ];
 
     protected $casts = [
@@ -55,6 +56,14 @@ class Database extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the website this database is associated with.
+     */
+    public function website(): BelongsTo
+    {
+        return $this->belongsTo(Website::class);
     }
 
     /**
