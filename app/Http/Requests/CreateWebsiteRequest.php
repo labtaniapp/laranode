@@ -86,11 +86,21 @@ class CreateWebsiteRequest extends FormRequest
             ]);
         }
 
-        // Set default instances for Node.js
-        if ($this->input('application_type') === ApplicationType::NodeJS->value && !$this->has('instances')) {
-            $this->merge([
-                'instances' => 1,
-            ]);
+        // Set defaults for Node.js
+        if ($this->input('application_type') === ApplicationType::NodeJS->value) {
+            $defaults = [];
+
+            if (!$this->filled('instances')) {
+                $defaults['instances'] = 1;
+            }
+
+            if (!$this->filled('app_port')) {
+                $defaults['app_port'] = 3000;
+            }
+
+            if (!empty($defaults)) {
+                $this->merge($defaults);
+            }
         }
     }
 }

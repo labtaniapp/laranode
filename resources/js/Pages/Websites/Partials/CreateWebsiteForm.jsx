@@ -46,6 +46,7 @@ export default function CreateWebsiteForm({ serverIp, applicationTypes = [], nod
         php_version_id: null,
         node_version_id: null,
         startup_file: 'app.js',
+        app_port: 3000,
         instances: 1,
     });
 
@@ -288,21 +289,43 @@ export default function CreateWebsiteForm({ serverIp, applicationTypes = [], nod
                                     <InputError message={errors.node_version_id} className="mt-2" />
                                 </div>
 
-                                <div>
-                                    <InputLabel htmlFor="startup_file" value="Startup File" className='my-2' />
-                                    <TextInput
-                                        id="startup_file"
-                                        name="startup_file"
-                                        value={data.startup_file}
-                                        onChange={(e) => setData('startup_file', e.target.value)}
-                                        className="mt-1 block w-full"
-                                        placeholder="app.js"
-                                        required
-                                    />
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                                        The main entry point of your Node.js application (e.g., app.js, server.js, index.js)
-                                    </p>
-                                    <InputError message={errors.startup_file} className="mt-2" />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <InputLabel htmlFor="startup_file" value="Startup File" className='my-2' />
+                                        <TextInput
+                                            id="startup_file"
+                                            name="startup_file"
+                                            value={data.startup_file}
+                                            onChange={(e) => setData('startup_file', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            placeholder="app.js"
+                                            required
+                                        />
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            Entry point (app.js, server.js, index.js)
+                                        </p>
+                                        <InputError message={errors.startup_file} className="mt-2" />
+                                    </div>
+
+                                    <div>
+                                        <InputLabel htmlFor="app_port" value="Port" className='my-2' />
+                                        <TextInput
+                                            id="app_port"
+                                            name="app_port"
+                                            type="number"
+                                            min="1024"
+                                            max="65535"
+                                            value={data.app_port}
+                                            onChange={(e) => setData('app_port', parseInt(e.target.value) || 3000)}
+                                            className="mt-1 block w-full"
+                                            placeholder="3000"
+                                            required
+                                        />
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                            Port your app listens on (default: 3000)
+                                        </p>
+                                        <InputError message={errors.app_port} className="mt-2" />
+                                    </div>
                                 </div>
 
                                 <div>
