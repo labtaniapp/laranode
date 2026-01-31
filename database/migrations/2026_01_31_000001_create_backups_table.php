@@ -40,6 +40,7 @@ return new class extends Migration
             $table->enum('storage', ['local', 's3'])->default('local');
             $table->string('s3_bucket')->nullable();
             $table->string('s3_region')->nullable();
+            $table->string('s3_endpoint')->nullable(); // Custom endpoint for R2, Wasabi, etc.
             $table->string('s3_access_key')->nullable();
             $table->text('s3_secret_key')->nullable(); // encrypted
             $table->string('s3_path')->nullable();

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # LaraNode Backup Creation Script
-# Usage: laranode-backup-create.sh <backup_id> <website_id> <username> <include_files> <include_db> <storage> [s3_bucket] [s3_region] [s3_key] [s3_secret] [s3_path]
+# Usage: laranode-backup-create.sh <backup_id> <website_id> <username> <include_files> <include_db> <storage> [s3_bucket] [s3_region] [s3_key] [s3_secret] [s3_path] [s3_endpoint]
 
 PANEL_PATH="/home/laranode_ln/panel"
 LOG_FILE="/var/log/laranode-backup.log"
@@ -17,6 +17,7 @@ S3_REGION="$8"
 S3_KEY="$9"
 S3_SECRET="${10}"
 S3_PATH="${11}"
+S3_ENDPOINT="${12}"
 
 log() {
     echo "$(date '+%Y-%m-%d %H:%M:%S') - $1" >> "$LOG_FILE"
@@ -174,7 +175,13 @@ if [ "$STORAGE" == "s3" ] && [ -n "$S3_BUCKET" ]; then
     fi
     S3_DEST="$S3_DEST/$BACKUP_FILENAME"
 
-    aws s3 cp "$BACKUP_PATH" "$S3_DEST" 2>/dev/null
+    # Build AWS CLI options
+    AWS_OPTS=""
+    if [ -n "$S3_ENDPOINT" ]; then
+        AWS_OPTS="--endpoint-url $S3_ENDPOINT"
+    fi
+
+    aws $AWS_OPTS s3 cp "$BACKUP_PATH" "$S3_DEST" 2>/dev/null
 
     if [ $? -eq 0 ]; then
         log "S3 upload completed"

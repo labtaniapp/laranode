@@ -63,6 +63,7 @@ class BackupController extends Controller
                 'storage' => $settings->storage,
                 's3_bucket' => $settings->s3_bucket,
                 's3_region' => $settings->s3_region,
+                's3_endpoint' => $settings->s3_endpoint,
                 's3_access_key' => $settings->s3_access_key,
                 's3_path' => $settings->s3_path,
                 's3_configured' => $settings->isS3Configured(),
@@ -129,6 +130,7 @@ class BackupController extends Controller
             $params[] = $settings->s3_access_key;
             $params[] = $settings->s3_secret_key_decrypted;
             $params[] = $settings->s3_path ?? '';
+            $params[] = $settings->s3_endpoint ?? '';
         }
 
         $paramsString = implode(' ', array_map('escapeshellarg', $params));
@@ -218,15 +220,20 @@ class BackupController extends Controller
                     $s3Path = ($settings->s3_path ? $settings->s3_path . '/' : '') . $backup->filename;
 
                     // Configure S3 disk dynamically
-                    config([
-                        'filesystems.disks.s3_backup' => [
-                            'driver' => 's3',
-                            'key' => $settings->s3_access_key,
-                            'secret' => $settings->s3_secret_key_decrypted,
-                            'region' => $settings->s3_region,
-                            'bucket' => $settings->s3_bucket,
-                        ],
-                    ]);
+                    $s3Config = [
+                        'driver' => 's3',
+                        'key' => $settings->s3_access_key,
+                        'secret' => $settings->s3_secret_key_decrypted,
+                        'region' => $settings->s3_region,
+                        'bucket' => $settings->s3_bucket,
+                    ];
+
+                    if ($settings->s3_endpoint) {
+                        $s3Config['endpoint'] = $settings->s3_endpoint;
+                        $s3Config['use_path_style_endpoint'] = true;
+                    }
+
+                    config(['filesystems.disks.s3_backup' => $s3Config]);
 
                     Storage::disk('s3_backup')->delete($s3Path);
                 } catch (\Exception $e) {
@@ -256,6 +263,7 @@ class BackupController extends Controller
             'storage' => 'in:local,s3',
             's3_bucket' => 'nullable|string|max:255',
             's3_region' => 'nullable|string|max:50',
+            's3_endpoint' => 'nullable|string|max:255',
             's3_access_key' => 'nullable|string|max:255',
             's3_secret_key' => 'nullable|string|max:255',
             's3_path' => 'nullable|string|max:255',
@@ -270,6 +278,7 @@ class BackupController extends Controller
             'storage' => $validated['storage'] ?? 'local',
             's3_bucket' => $validated['s3_bucket'],
             's3_region' => $validated['s3_region'],
+            's3_endpoint' => $validated['s3_endpoint'],
             's3_access_key' => $validated['s3_access_key'],
             's3_path' => $validated['s3_path'],
         ]);
@@ -293,21 +302,27 @@ class BackupController extends Controller
         $validated = $request->validate([
             's3_bucket' => 'required|string',
             's3_region' => 'required|string',
+            's3_endpoint' => 'nullable|string',
             's3_access_key' => 'required|string',
             's3_secret_key' => 'required|string',
         ]);
 
         try {
             // Configure S3 disk dynamically
-            config([
-                'filesystems.disks.s3_test' => [
-                    'driver' => 's3',
-                    'key' => $validated['s3_access_key'],
-                    'secret' => $validated['s3_secret_key'],
-                    'region' => $validated['s3_region'],
-                    'bucket' => $validated['s3_bucket'],
-                ],
-            ]);
+            $s3Config = [
+                'driver' => 's3',
+                'key' => $validated['s3_access_key'],
+                'secret' => $validated['s3_secret_key'],
+                'region' => $validated['s3_region'],
+                'bucket' => $validated['s3_bucket'],
+            ];
+
+            if (!empty($validated['s3_endpoint'])) {
+                $s3Config['endpoint'] = $validated['s3_endpoint'];
+                $s3Config['use_path_style_endpoint'] = true;
+            }
+
+            config(['filesystems.disks.s3_test' => $s3Config]);
 
             // Try to list files to test connection
             Storage::disk('s3_test')->files('/');

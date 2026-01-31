@@ -52,7 +52,7 @@ if [ "$BACKUP_STORAGE" == "s3" ]; then
     S3_SETTINGS=$(cd "$PANEL_PATH" && php artisan tinker --execute="
         \$b = \App\Models\Backup::find($BACKUP_ID);
         \$s = \App\Models\BackupSettings::where('user_id', \$b->user_id)->first();
-        echo \$s->s3_bucket . '|' . \$s->s3_region . '|' . \$s->s3_access_key . '|' . \$s->s3_secret_key_decrypted . '|' . \$s->s3_path;
+        echo \$s->s3_bucket . '|' . \$s->s3_region . '|' . \$s->s3_access_key . '|' . \$s->s3_secret_key_decrypted . '|' . \$s->s3_path . '|' . \$s->s3_endpoint;
     " 2>/dev/null | tail -1)
 
     S3_BUCKET=$(echo "$S3_SETTINGS" | cut -d'|' -f1)
@@ -60,6 +60,7 @@ if [ "$BACKUP_STORAGE" == "s3" ]; then
     S3_KEY=$(echo "$S3_SETTINGS" | cut -d'|' -f3)
     S3_SECRET=$(echo "$S3_SETTINGS" | cut -d'|' -f4)
     S3_PATH=$(echo "$S3_SETTINGS" | cut -d'|' -f5)
+    S3_ENDPOINT=$(echo "$S3_SETTINGS" | cut -d'|' -f6)
 
     export AWS_ACCESS_KEY_ID="$S3_KEY"
     export AWS_SECRET_ACCESS_KEY="$S3_SECRET"
@@ -71,8 +72,14 @@ if [ "$BACKUP_STORAGE" == "s3" ]; then
     fi
     S3_SRC="$S3_SRC/$BACKUP_FILENAME"
 
+    # Build AWS CLI options for custom endpoint
+    AWS_OPTS=""
+    if [ -n "$S3_ENDPOINT" ]; then
+        AWS_OPTS="--endpoint-url $S3_ENDPOINT"
+    fi
+
     TEMP_BACKUP="/tmp/$BACKUP_FILENAME"
-    aws s3 cp "$S3_SRC" "$TEMP_BACKUP" 2>/dev/null
+    aws $AWS_OPTS s3 cp "$S3_SRC" "$TEMP_BACKUP" 2>/dev/null
 
     if [ $? -ne 0 ]; then
         log "ERROR: Failed to download from S3"

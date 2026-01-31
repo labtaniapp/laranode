@@ -33,6 +33,7 @@ export default function BackupsIndex({ backups, websites, settings }) {
         storage: settings.storage,
         s3_bucket: settings.s3_bucket || '',
         s3_region: settings.s3_region || '',
+        s3_endpoint: settings.s3_endpoint || '',
         s3_access_key: settings.s3_access_key || '',
         s3_secret_key: '',
         s3_path: settings.s3_path || '',
@@ -109,6 +110,7 @@ export default function BackupsIndex({ backups, websites, settings }) {
                 body: JSON.stringify({
                     s3_bucket: settingsForm.data.s3_bucket,
                     s3_region: settingsForm.data.s3_region,
+                    s3_endpoint: settingsForm.data.s3_endpoint,
                     s3_access_key: settingsForm.data.s3_access_key,
                     s3_secret_key: settingsForm.data.s3_secret_key || settings.s3_secret_key,
                 }),
@@ -370,7 +372,7 @@ export default function BackupsIndex({ backups, websites, settings }) {
                             >
                                 <option value="local">Local (Server)</option>
                                 <option value="s3" disabled={!settings.s3_configured}>
-                                    Amazon S3 {!settings.s3_configured && '(Not configured)'}
+                                    S3 Compatible {!settings.s3_configured && '(Not configured)'}
                                 </option>
                             </select>
                             <InputError message={createForm.errors.storage} className="mt-2" />
@@ -472,7 +474,7 @@ export default function BackupsIndex({ backups, websites, settings }) {
                                     />
                                     <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
                                         <FaAws className="inline w-4 h-4 mr-1" />
-                                        Amazon S3
+                                        S3 Compatible (AWS, R2, Wasabi, etc.)
                                     </span>
                                 </label>
                             </div>
@@ -483,7 +485,7 @@ export default function BackupsIndex({ backups, websites, settings }) {
                             <div>
                                 <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                                     <FaAws className="mr-2 text-orange-500" />
-                                    Amazon S3 Configuration
+                                    S3 Compatible Storage Configuration
                                 </h3>
 
                                 <div className="grid grid-cols-2 gap-4">
@@ -504,8 +506,21 @@ export default function BackupsIndex({ backups, websites, settings }) {
                                             value={settingsForm.data.s3_region}
                                             onChange={(e) => settingsForm.setData('s3_region', e.target.value)}
                                             className="mt-1 block w-full"
-                                            placeholder="us-east-1"
+                                            placeholder="us-east-1 or auto"
                                         />
+                                    </div>
+                                    <div className="col-span-2">
+                                        <InputLabel htmlFor="s3_endpoint" value="Custom Endpoint (for R2, Wasabi, etc.)" />
+                                        <TextInput
+                                            id="s3_endpoint"
+                                            value={settingsForm.data.s3_endpoint}
+                                            onChange={(e) => settingsForm.setData('s3_endpoint', e.target.value)}
+                                            className="mt-1 block w-full"
+                                            placeholder="https://xxx.r2.cloudflarestorage.com (leave empty for AWS S3)"
+                                        />
+                                        <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                            Examples: R2: https://account-id.r2.cloudflarestorage.com | Wasabi: https://s3.wasabisys.com | DigitalOcean: https://region.digitaloceanspaces.com
+                                        </p>
                                     </div>
                                     <div>
                                         <InputLabel htmlFor="s3_access_key" value="Access Key ID" />

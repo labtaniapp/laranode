@@ -16,6 +16,7 @@ class BackupSettings extends Model
         'storage',
         's3_bucket',
         's3_region',
+        's3_endpoint',
         's3_access_key',
         's3_secret_key',
         's3_path',
