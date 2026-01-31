@@ -10,6 +10,7 @@ use App\Http\Controllers\MysqlController;
 use App\Http\Controllers\PHPManagerController;
 use App\Http\Controllers\RuntimeManagerController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StatsHistoryController;
 use App\Http\Controllers\WebsiteController;
 use App\Http\Middleware\AdminMiddleware;
@@ -138,6 +139,14 @@ Route::post('/filemanager/upload-file', [FilemanagerController::class, 'uploadFi
 
 // Stats History [Admin]
 Route::get('/stats/history', [StatsHistoryController::class, 'cpuAndMemory'])->middleware(['auth', AdminMiddleware::class])->name('stats.history');
+
+// Settings [Admin]
+Route::middleware(['auth', AdminMiddleware::class])->prefix('admin/settings')->group(function () {
+    Route::get('/', [SettingsController::class, 'index'])->name('settings.index');
+    Route::patch('/', [SettingsController::class, 'update'])->name('settings.update');
+    Route::get('/timezones', [SettingsController::class, 'getTimezones'])->name('settings.timezones');
+    Route::get('/test-url', [SettingsController::class, 'testUrl'])->name('settings.test-url');
+});
 
 // Accounts
 Route::middleware('auth')->group(function () {
