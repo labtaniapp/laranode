@@ -1,15 +1,17 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
-import { TbWorldWww, TbArrowLeft, TbClock, TbInfoCircle, TbDatabase, TbFolder, TbFileText } from 'react-icons/tb';
+import { TbWorldWww, TbArrowLeft, TbClock, TbInfoCircle, TbDatabase, TbFolder, TbFileText, TbGitBranch, TbCloudUpload } from 'react-icons/tb';
 import { FaPhp, FaNodeJs, FaHtml5 } from 'react-icons/fa';
 import OverviewTab from './Partials/OverviewTab';
 import CronJobsTab from './Partials/CronJobsTab';
 import DatabasesTab from './Partials/DatabasesTab';
 import FileManagerTab from './Partials/FileManagerTab';
 import LogsTab from './Partials/LogsTab';
+import GitTab from './Partials/GitTab';
+import BackupTab from './Partials/BackupTab';
 
-export default function WebsiteShow({ website, cronJobs, cronTemplates, phpVersions = [], nodeVersions = [] }) {
+export default function WebsiteShow({ website, cronJobs, cronTemplates, phpVersions = [], nodeVersions = [], gitRepository = null, backups = [], backupSettings = {} }) {
     const [activeTab, setActiveTab] = useState('overview');
 
     const tabs = [
@@ -18,6 +20,8 @@ export default function WebsiteShow({ website, cronJobs, cronTemplates, phpVersi
         { id: 'databases', label: 'Databases', icon: TbDatabase, count: website.databases?.length || 0 },
         { id: 'cron', label: 'Cron Jobs', icon: TbClock, count: cronJobs?.length || 0 },
         { id: 'logs', label: 'Logs', icon: TbFileText },
+        { id: 'git', label: 'Git Deploy', icon: TbGitBranch, indicator: gitRepository ? 'connected' : null },
+        { id: 'backups', label: 'Backups', icon: TbCloudUpload, count: backups?.length || 0 },
     ];
 
     const getAppIcon = () => {
@@ -99,6 +103,9 @@ export default function WebsiteShow({ website, cronJobs, cronTemplates, phpVersi
                                             {tab.count}
                                         </span>
                                     )}
+                                    {tab.indicator === 'connected' && (
+                                        <span className="ml-2 w-2 h-2 rounded-full bg-green-500"></span>
+                                    )}
                                 </button>
                             );
                         })}
@@ -125,6 +132,12 @@ export default function WebsiteShow({ website, cronJobs, cronTemplates, phpVersi
                     )}
                     {activeTab === 'logs' && (
                         <LogsTab website={website} />
+                    )}
+                    {activeTab === 'git' && (
+                        <GitTab website={website} gitRepository={gitRepository} />
+                    )}
+                    {activeTab === 'backups' && (
+                        <BackupTab website={website} backups={backups} settings={backupSettings} />
                     )}
                 </div>
             </div>

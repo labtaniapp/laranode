@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Enums\ApplicationType;
 use App\Http\Requests\CreateWebsiteRequest;
 use App\Http\Requests\UpdateWebsitePHPVersionRequest;
+use App\Models\Backup;
+use App\Models\BackupSettings;
 use App\Models\CronJob;
+use App\Models\GitRepository;
 use App\Models\NodeVersion;
 use App\Models\Website;
 use App\Models\PhpVersion;
@@ -69,12 +72,72 @@ class WebsiteController extends Controller
         $phpVersions = PhpVersion::active()->get();
         $nodeVersions = NodeVersion::active()->get();
 
+        // Get Git repository for this website
+        $gitRepository = GitRepository::where('website_id', $website->id)
+            ->with('latestDeployment')
+            ->first();
+
+        if ($gitRepository) {
+            $gitRepository = [
+                'id' => $gitRepository->id,
+                'provider' => $gitRepository->provider,
+                'repository_url' => $gitRepository->repository_url,
+                'repository_name' => $gitRepository->repository_name,
+                'branch' => $gitRepository->branch,
+                'framework' => $gitRepository->framework,
+                'auto_deploy' => $gitRepository->auto_deploy,
+                'last_deployed_at' => $gitRepository->last_deployed_at,
+                'webhook_url' => $gitRepository->webhook_url,
+                'latest_deployment' => $gitRepository->latestDeployment ? [
+                    'id' => $gitRepository->latestDeployment->id,
+                    'status' => $gitRepository->latestDeployment->status,
+                    'status_label' => $gitRepository->latestDeployment->status_label,
+                    'commit_hash' => $gitRepository->latestDeployment->short_commit_hash,
+                    'commit_message' => $gitRepository->latestDeployment->commit_message,
+                    'trigger' => $gitRepository->latestDeployment->trigger,
+                    'duration' => $gitRepository->latestDeployment->formatted_duration,
+                    'created_at' => $gitRepository->latestDeployment->created_at,
+                ] : null,
+            ];
+        }
+
+        // Get backups for this website
+        $backups = Backup::where('website_id', $website->id)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(function ($backup) {
+                return [
+                    'id' => $backup->id,
+                    'name' => $backup->name,
+                    'filename' => $backup->filename,
+                    'storage' => $backup->storage,
+                    'size' => $backup->formatted_size,
+                    'includes_files' => $backup->includes_files,
+                    'includes_database' => $backup->includes_database,
+                    'status' => $backup->status,
+                    'error_message' => $backup->error_message,
+                    'created_at' => $backup->created_at,
+                    'is_downloadable' => $backup->isDownloadable(),
+                    'is_restorable' => $backup->isRestorable(),
+                ];
+            });
+
+        // Get backup settings
+        $backupSettings = BackupSettings::forUser(auth()->user());
+        $backupSettings = [
+            'storage' => $backupSettings->storage,
+            's3_configured' => $backupSettings->isS3Configured(),
+        ];
+
         return Inertia::render('Websites/Show', compact(
             'website',
             'cronJobs',
             'cronTemplates',
             'phpVersions',
-            'nodeVersions'
+            'nodeVersions',
+            'gitRepository',
+            'backups',
+            'backupSettings'
         ));
     }
 
