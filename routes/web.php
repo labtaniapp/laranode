@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\AdminerController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DatabaseController;
 use App\Http\Controllers\FilemanagerController;
@@ -136,6 +137,17 @@ Route::patch('/filemanager/paste-files', [FilemanagerController::class, 'pasteFi
 Route::post('/filemanager/delete-files', [FilemanagerController::class, 'deleteFiles'])->middleware(['auth'])->name('filemanager.deleteFiles');
 Route::post('/filemanager/upload-file', [FilemanagerController::class, 'uploadFile'])->middleware(['auth'])->name('filemanager.uploadFile');
 
+// Backups [Admin | User]
+Route::middleware(['auth'])->prefix('backups')->group(function () {
+    Route::get('/', [BackupController::class, 'index'])->name('backups.index');
+    Route::post('/', [BackupController::class, 'store'])->name('backups.store');
+    Route::get('/{backup}/download', [BackupController::class, 'download'])->name('backups.download');
+    Route::post('/{backup}/restore', [BackupController::class, 'restore'])->name('backups.restore');
+    Route::delete('/{backup}', [BackupController::class, 'destroy'])->name('backups.destroy');
+    Route::get('/{backup}/status', [BackupController::class, 'status'])->name('backups.status');
+    Route::patch('/settings', [BackupController::class, 'updateSettings'])->name('backups.settings');
+    Route::post('/test-s3', [BackupController::class, 'testS3'])->name('backups.test-s3');
+});
 
 // Stats History [Admin]
 Route::get('/stats/history', [StatsHistoryController::class, 'cpuAndMemory'])->middleware(['auth', AdminMiddleware::class])->name('stats.history');
