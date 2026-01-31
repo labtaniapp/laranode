@@ -6,10 +6,20 @@
 export DEBIAN_FRONTEND=noninteractive
 
 # ============================================
-# CONFIGURATION - Change this to your repo
+# CONFIGURATION
 # ============================================
-LARANODE_REPO="https://github.com/labtaniapp/laranode.git"
-LARANODE_BRANCH="main"
+LARANODE_REPO_BASE="github.com/labtaniapp/laranode.git"
+LARANODE_BRANCH="${LARANODE_BRANCH:-main}"
+
+# Support for private repos with GITHUB_TOKEN
+# Usage: curl -sL https://example.com/install.sh | GITHUB_TOKEN=ghp_xxx bash
+if [ -n "$GITHUB_TOKEN" ]; then
+    LARANODE_REPO="https://${GITHUB_TOKEN}@${LARANODE_REPO_BASE}"
+    echo -e "\033[32m[INFO] Using authenticated GitHub access\033[0m"
+else
+    LARANODE_REPO="https://${LARANODE_REPO_BASE}"
+    echo -e "\033[32m[INFO] Using public GitHub access\033[0m"
+fi
 # ============================================
 
 echo -e "\033[34m"
@@ -29,6 +39,45 @@ echo -e "\033[0m"
 
 apt install -y apache2
 
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Installing Nginx Web Server (for Node.js & Static sites)"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+apt install -y nginx
+
+# Configure Nginx to listen on port 8080 (Apache uses 80)
+# Remove default site
+rm -f /etc/nginx/sites-enabled/default
+
+# Create a custom nginx.conf snippet for port 8080 default
+cat > /etc/nginx/sites-available/default-8080 << 'NGINX_DEFAULT'
+server {
+    listen 8080 default_server;
+    listen [::]:8080 default_server;
+
+    root /var/www/html;
+    index index.html index.htm;
+
+    server_name _;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+NGINX_DEFAULT
+
+ln -sf /etc/nginx/sites-available/default-8080 /etc/nginx/sites-enabled/default-8080
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Enabling and starting nginx"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+systemctl enable nginx
+systemctl start nginx
 
 echo -e "\033[34m"
 echo "--------------------------------------------------------------------------------"
@@ -172,7 +221,7 @@ echo "--------------------------------------------------------------------------
 echo "Installing certbot"
 echo "--------------------------------------------------------------------------------"
 echo -e "\033[0m"
-apt -y install certbot python3-certbot-apache
+apt -y install certbot python3-certbot-apache python3-certbot-nginx
 
 
 echo -e "\033[34m"
@@ -196,7 +245,7 @@ echo "Adding www-data to sudoers and allowing to run laranode scripts"
 echo "--------------------------------------------------------------------------------"
 echo -e "\033[0m"
 
-echo "www-data ALL=(ALL) NOPASSWD: /home/laranode_ln/panel/laranode-scripts/bin/*.sh, /usr/sbin/a2dissite, /bin/rm /etc/apache2/sites-available/*.conf" >> /etc/sudoers
+echo "www-data ALL=(ALL) NOPASSWD: /home/laranode_ln/panel/laranode-scripts/bin/*.sh, /usr/sbin/a2dissite, /bin/rm /etc/apache2/sites-available/*.conf, /usr/sbin/nginx, /bin/systemctl reload nginx, /bin/systemctl restart nginx, /bin/rm /etc/nginx/sites-available/*, /bin/rm /etc/nginx/sites-enabled/*, /usr/bin/supervisorctl, /bin/rm /etc/supervisor/conf.d/laranode/*" >> /etc/sudoers
 
 echo -e "\033[34m"
 echo "--------------------------------------------------------------------------------"
@@ -215,6 +264,26 @@ echo -e "\033[0m"
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Installing PM2 (Node.js Process Manager)"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+npm install -g pm2
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Installing Supervisor (Process Manager for PHP workers)"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+apt install -y supervisor
+systemctl enable supervisor
+systemctl start supervisor
+
+# Create directory for Laranode supervisor configs
+mkdir -p /etc/supervisor/conf.d/laranode
 
 echo -e "\033[34m"
 echo "--------------------------------------------------------------------------------"

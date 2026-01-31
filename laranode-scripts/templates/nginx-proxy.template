@@ -1,5 +1,5 @@
 server {
-    listen 80;
+    listen 8080;
     server_name {domain} www.{domain};
 
     access_log /home/{user}/logs/nginx-access.log;

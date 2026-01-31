@@ -2,10 +2,13 @@
 
 use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\AdminerController;
+use App\Http\Controllers\BackupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DatabaseController;
 use App\Http\Controllers\FilemanagerController;
 use App\Http\Controllers\FirewallController;
+use App\Http\Controllers\GitDeploymentController;
+use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\MysqlController;
 use App\Http\Controllers\PHPManagerController;
 use App\Http\Controllers\RuntimeManagerController;
@@ -136,6 +139,48 @@ Route::patch('/filemanager/paste-files', [FilemanagerController::class, 'pasteFi
 Route::post('/filemanager/delete-files', [FilemanagerController::class, 'deleteFiles'])->middleware(['auth'])->name('filemanager.deleteFiles');
 Route::post('/filemanager/upload-file', [FilemanagerController::class, 'uploadFile'])->middleware(['auth'])->name('filemanager.uploadFile');
 
+// Backups [Admin | User]
+Route::middleware(['auth'])->prefix('backups')->group(function () {
+    Route::get('/', [BackupController::class, 'index'])->name('backups.index');
+    Route::post('/', [BackupController::class, 'store'])->name('backups.store');
+    Route::get('/{backup}/download', [BackupController::class, 'download'])->name('backups.download');
+    Route::post('/{backup}/restore', [BackupController::class, 'restore'])->name('backups.restore');
+    Route::delete('/{backup}', [BackupController::class, 'destroy'])->name('backups.destroy');
+    Route::get('/{backup}/status', [BackupController::class, 'status'])->name('backups.status');
+    Route::patch('/settings', [BackupController::class, 'updateSettings'])->name('backups.settings');
+    Route::post('/test-s3', [BackupController::class, 'testS3'])->name('backups.test-s3');
+});
+
+// Git Deployment [Admin | User]
+Route::middleware(['auth'])->prefix('git')->group(function () {
+    Route::get('/', [GitDeploymentController::class, 'index'])->name('git.index');
+    Route::post('/connect', [GitDeploymentController::class, 'connect'])->name('git.connect');
+    Route::patch('/{repository}', [GitDeploymentController::class, 'update'])->name('git.update');
+    Route::delete('/{repository}', [GitDeploymentController::class, 'disconnect'])->name('git.disconnect');
+    Route::post('/{repository}/deploy', [GitDeploymentController::class, 'deploy'])->name('git.deploy');
+    Route::get('/{repository}/history', [GitDeploymentController::class, 'history'])->name('git.history');
+    Route::post('/{repository}/regenerate-webhook', [GitDeploymentController::class, 'regenerateWebhook'])->name('git.regenerate-webhook');
+    Route::get('/deployments/{deployment}/logs', [GitDeploymentController::class, 'logs'])->name('git.logs');
+    Route::post('/deployments/{deployment}/rollback', [GitDeploymentController::class, 'rollback'])->name('git.rollback');
+    Route::get('/deploy-script', [GitDeploymentController::class, 'getDeployScript'])->name('git.deploy-script');
+});
+
+// Git Webhook (Public - no auth required)
+Route::post('/git/webhook/{repository}/{secret}', [GitDeploymentController::class, 'webhook'])->name('git.webhook');
+
+// Supervisor Workers [Admin | User]
+Route::middleware(['auth'])->prefix('websites/{website}/workers')->group(function () {
+    Route::get('/', [SupervisorController::class, 'index'])->name('websites.workers.index');
+    Route::post('/', [SupervisorController::class, 'store'])->name('websites.workers.store');
+    Route::patch('/{worker}', [SupervisorController::class, 'update'])->name('websites.workers.update');
+    Route::delete('/{worker}', [SupervisorController::class, 'destroy'])->name('websites.workers.destroy');
+    Route::post('/{worker}/start', [SupervisorController::class, 'start'])->name('websites.workers.start');
+    Route::post('/{worker}/stop', [SupervisorController::class, 'stop'])->name('websites.workers.stop');
+    Route::post('/{worker}/restart', [SupervisorController::class, 'restart'])->name('websites.workers.restart');
+    Route::get('/{worker}/logs', [SupervisorController::class, 'logs'])->name('websites.workers.logs');
+});
+Route::get('/workers/presets', [SupervisorController::class, 'presets'])->middleware(['auth'])->name('workers.presets');
+Route::get('/workers/stats', [SupervisorController::class, 'stats'])->middleware(['auth'])->name('workers.stats');
 
 // Stats History [Admin]
 Route::get('/stats/history', [StatsHistoryController::class, 'cpuAndMemory'])->middleware(['auth', AdminMiddleware::class])->name('stats.history');
