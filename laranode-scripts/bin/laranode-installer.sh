@@ -6,10 +6,20 @@
 export DEBIAN_FRONTEND=noninteractive
 
 # ============================================
-# CONFIGURATION - Change this to your repo
+# CONFIGURATION
 # ============================================
-LARANODE_REPO="https://github.com/labtaniapp/laranode.git"
-LARANODE_BRANCH="main"
+LARANODE_REPO_BASE="github.com/labtaniapp/laranode.git"
+LARANODE_BRANCH="${LARANODE_BRANCH:-main}"
+
+# Support for private repos with GITHUB_TOKEN
+# Usage: curl -sL https://example.com/install.sh | GITHUB_TOKEN=ghp_xxx bash
+if [ -n "$GITHUB_TOKEN" ]; then
+    LARANODE_REPO="https://${GITHUB_TOKEN}@${LARANODE_REPO_BASE}"
+    echo -e "\033[32m[INFO] Using authenticated GitHub access\033[0m"
+else
+    LARANODE_REPO="https://${LARANODE_REPO_BASE}"
+    echo -e "\033[32m[INFO] Using public GitHub access\033[0m"
+fi
 # ============================================
 
 echo -e "\033[34m"
