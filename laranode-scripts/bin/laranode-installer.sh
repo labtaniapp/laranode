@@ -29,6 +29,45 @@ echo -e "\033[0m"
 
 apt install -y apache2
 
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Installing Nginx Web Server (for Node.js & Static sites)"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+apt install -y nginx
+
+# Configure Nginx to listen on port 8080 (Apache uses 80)
+# Remove default site
+rm -f /etc/nginx/sites-enabled/default
+
+# Create a custom nginx.conf snippet for port 8080 default
+cat > /etc/nginx/sites-available/default-8080 << 'NGINX_DEFAULT'
+server {
+    listen 8080 default_server;
+    listen [::]:8080 default_server;
+
+    root /var/www/html;
+    index index.html index.htm;
+
+    server_name _;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+}
+NGINX_DEFAULT
+
+ln -sf /etc/nginx/sites-available/default-8080 /etc/nginx/sites-enabled/default-8080
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Enabling and starting nginx"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+systemctl enable nginx
+systemctl start nginx
 
 echo -e "\033[34m"
 echo "--------------------------------------------------------------------------------"
@@ -172,7 +211,7 @@ echo "--------------------------------------------------------------------------
 echo "Installing certbot"
 echo "--------------------------------------------------------------------------------"
 echo -e "\033[0m"
-apt -y install certbot python3-certbot-apache
+apt -y install certbot python3-certbot-apache python3-certbot-nginx
 
 
 echo -e "\033[34m"
@@ -196,7 +235,7 @@ echo "Adding www-data to sudoers and allowing to run laranode scripts"
 echo "--------------------------------------------------------------------------------"
 echo -e "\033[0m"
 
-echo "www-data ALL=(ALL) NOPASSWD: /home/laranode_ln/panel/laranode-scripts/bin/*.sh, /usr/sbin/a2dissite, /bin/rm /etc/apache2/sites-available/*.conf" >> /etc/sudoers
+echo "www-data ALL=(ALL) NOPASSWD: /home/laranode_ln/panel/laranode-scripts/bin/*.sh, /usr/sbin/a2dissite, /bin/rm /etc/apache2/sites-available/*.conf, /usr/sbin/nginx, /bin/systemctl reload nginx, /bin/systemctl restart nginx, /bin/rm /etc/nginx/sites-available/*, /bin/rm /etc/nginx/sites-enabled/*" >> /etc/sudoers
 
 echo -e "\033[34m"
 echo "--------------------------------------------------------------------------------"
@@ -215,6 +254,13 @@ echo -e "\033[0m"
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Installing PM2 (Node.js Process Manager)"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+npm install -g pm2
 
 echo -e "\033[34m"
 echo "--------------------------------------------------------------------------------"
