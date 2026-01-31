@@ -389,10 +389,10 @@ echo ""
 echo "PostgreSQL Username: laranode"
 echo "PostgreSQL Password: $POSTGRES_RANDOM_PASS"
 
-echo -e "\033[32m --- IMPORTANT ---\033[0m"
-
-echo "Final Step: Now create an admin account for Laranode by running the following command:"
-echo -e "\033[33m cd /home/laranode_ln/panel && php artisan laranode:create-admin \033[0m"
+echo -e "\033[32m --- ADMIN LOGIN ---\033[0m"
+echo "Email: admin@expertiseablo.com"
+echo "Password: Myadmin.10"
+echo -e "\033[31m IMPORTANT: Change your password after first login! \033[0m"
 
 echo "================================================================================"
 echo "================================================================================"

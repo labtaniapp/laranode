@@ -18,23 +18,21 @@ curl -sL https://raw.githubusercontent.com/labtaniapp/laranode/main/laranode-scr
 curl -sL https://raw.githubusercontent.com/labtaniapp/laranode/main/laranode-scripts/bin/laranode-installer.sh | GITHUB_TOKEN=ghp_votre_token bash
 ```
 
-## Après l'installation
+## Accès Panel
 
-Créer le compte admin:
-```bash
-cd /home/laranode_ln/panel && php artisan laranode:create-admin
-```
+- **URL:** http://VOTRE_IP
+- **Email:** admin@expertiseablo.com
+- **Password:** Myadmin.10
 
-## Accès
+**Changez votre mot de passe après la première connexion!**
 
-- **Panel:** http://VOTRE_IP
-- **Port 80:** Apache (PHP)
-- **Port 8080:** Nginx (Node.js/Static)
+## Ports
 
-## Identifiants (affichés à la fin de l'installation)
+- **80:** Apache (PHP)
+- **8080:** Nginx (Node.js/Static)
 
-- MySQL root password
-- MySQL laranode password
-- PostgreSQL laranode password
+## Identifiants Base de Données
+
+Les mots de passe MySQL et PostgreSQL sont affichés à la fin de l'installation.
 
 **Gardez ces identifiants en lieu sûr!**
