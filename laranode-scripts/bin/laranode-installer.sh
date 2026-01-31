@@ -79,6 +79,26 @@ mysql -u root -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$ROOT_RANDOM_PASS
 
 echo -e "\033[34m"
 echo "--------------------------------------------------------------------------------"
+echo "Installing PostgreSQL Server"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+apt install -y postgresql postgresql-contrib
+systemctl enable postgresql
+systemctl start postgresql
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Creating Laranode PostgreSQL User"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+POSTGRES_RANDOM_PASS=$(openssl rand -base64 12)
+
+sudo -u postgres psql -c "CREATE USER laranode WITH PASSWORD '$POSTGRES_RANDOM_PASS' SUPERUSER CREATEDB CREATEROLE;"
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
 echo "Adding ppa:ondrej/php"
 echo "--------------------------------------------------------------------------------"
 echo -e "\033[0m"
@@ -223,6 +243,7 @@ cd /home/laranode_ln/panel
 composer install
 cp .env.example .env
 sed -i "s#DB_PASSWORD=.*#DB_PASSWORD=\"$LARANODE_RANDOM_PASS\"#" ".env"
+sed -i "s#PG_PASSWORD=.*#PG_PASSWORD=\"$POSTGRES_RANDOM_PASS\"#" ".env"
 sed -i "s#APP_URL=.*#APP_URL=\"http://$(curl icanhazip.com)\"#" ".env"
 
 php artisan key:generate
@@ -295,6 +316,9 @@ echo -e "\033[32m --- NOTES ---\033[0m"
 echo "MySQL Root Password: $ROOT_RANDOM_PASS"
 echo "Laranode MySQL Username: laranode"
 echo "Laranode MySQL Password: $LARANODE_RANDOM_PASS"
+echo ""
+echo "PostgreSQL Username: laranode"
+echo "PostgreSQL Password: $POSTGRES_RANDOM_PASS"
 
 echo -e "\033[32m --- IMPORTANT ---\033[0m"
 
