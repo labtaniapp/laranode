@@ -1,12 +1,13 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
-import { TbWorldWww, TbArrowLeft, TbClock, TbInfoCircle, TbDatabase, TbFolder } from 'react-icons/tb';
+import { TbWorldWww, TbArrowLeft, TbClock, TbInfoCircle, TbDatabase, TbFolder, TbFileText } from 'react-icons/tb';
 import { FaPhp, FaNodeJs, FaHtml5 } from 'react-icons/fa';
 import OverviewTab from './Partials/OverviewTab';
 import CronJobsTab from './Partials/CronJobsTab';
 import DatabasesTab from './Partials/DatabasesTab';
 import FileManagerTab from './Partials/FileManagerTab';
+import LogsTab from './Partials/LogsTab';
 
 export default function WebsiteShow({ website, cronJobs, cronTemplates, phpVersions = [], nodeVersions = [] }) {
     const [activeTab, setActiveTab] = useState('overview');
@@ -16,6 +17,7 @@ export default function WebsiteShow({ website, cronJobs, cronTemplates, phpVersi
         { id: 'files', label: 'File Manager', icon: TbFolder },
         { id: 'databases', label: 'Databases', icon: TbDatabase, count: website.databases?.length || 0 },
         { id: 'cron', label: 'Cron Jobs', icon: TbClock, count: cronJobs?.length || 0 },
+        { id: 'logs', label: 'Logs', icon: TbFileText },
     ];
 
     const getAppIcon = () => {
@@ -120,6 +122,9 @@ export default function WebsiteShow({ website, cronJobs, cronTemplates, phpVersi
                             cronJobs={cronJobs}
                             templates={cronTemplates}
                         />
+                    )}
+                    {activeTab === 'logs' && (
+                        <LogsTab website={website} />
                     )}
                 </div>
             </div>

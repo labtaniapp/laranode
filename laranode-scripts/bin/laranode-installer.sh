@@ -5,6 +5,13 @@
 
 export DEBIAN_FRONTEND=noninteractive
 
+# ============================================
+# CONFIGURATION - Change this to your repo
+# ============================================
+LARANODE_REPO="https://github.com/labtaniapp/laranode.git"
+LARANODE_BRANCH="main"
+# ============================================
+
 echo -e "\033[34m"
 echo "--------------------------------------------------------------------------------"
 echo "Installing software-properties-common and git"
@@ -202,7 +209,7 @@ echo "--------------------------------------------------------------------------
 echo "Cloning Laranode"
 echo -e "\033[0m"
 
-git clone https://github.com/crivion/laranode.git /home/laranode_ln/panel
+git clone -b "$LARANODE_BRANCH" "$LARANODE_REPO" /home/laranode_ln/panel
 echo "--------------------------------------------------------------------------------"
 
 

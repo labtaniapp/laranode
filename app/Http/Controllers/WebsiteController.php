@@ -355,6 +355,188 @@ class WebsiteController extends Controller
         ]);
     }
 
+    // =====================
+    // Logs Management
+    // =====================
+
+    /**
+     * Get available log files for a website
+     */
+    public function getLogFiles(Website $website)
+    {
+        Gate::authorize('view', $website);
+
+        $user = $website->user;
+        $logs = [];
+
+        // Common logs for all application types
+        $commonLogs = [
+            'nginx-access' => "/home/{$user->username}/logs/nginx-access.log",
+            'nginx-error' => "/home/{$user->username}/logs/nginx-error.log",
+        ];
+
+        // PHP-specific logs
+        if ($website->isPhp()) {
+            $logs = array_merge($commonLogs, [
+                'apache-access' => "/home/{$user->username}/logs/apache-access.log",
+                'apache-error' => "/home/{$user->username}/logs/apache-error.log",
+                'php-fpm-error' => "/home/{$user->username}/logs/php-fpm-error.log",
+            ]);
+        }
+        // Node.js-specific logs
+        elseif ($website->isNodeJs()) {
+            $logs = array_merge($commonLogs, [
+                'pm2-out' => "{$website->websiteRoot}/logs/pm2-out.log",
+                'pm2-error' => "{$website->websiteRoot}/logs/pm2-error.log",
+            ]);
+        }
+        // Static sites
+        else {
+            $logs = $commonLogs;
+        }
+
+        // Check which files exist and get their info
+        $availableLogs = [];
+        foreach ($logs as $name => $path) {
+            if (file_exists($path)) {
+                $availableLogs[] = [
+                    'name' => $name,
+                    'path' => $path,
+                    'size' => $this->formatLogFileSize(filesize($path)),
+                    'modified' => date('Y-m-d H:i:s', filemtime($path)),
+                ];
+            }
+        }
+
+        return response()->json([
+            'application_type' => $website->application_type,
+            'logs' => $availableLogs,
+        ]);
+    }
+
+    /**
+     * Get log content for a website
+     */
+    public function getLogContent(Request $request, Website $website)
+    {
+        Gate::authorize('view', $website);
+
+        $validated = $request->validate([
+            'log_name' => 'required|string',
+            'lines' => 'integer|min:10|max:1000',
+        ]);
+
+        $logName = $validated['log_name'];
+        $lines = $validated['lines'] ?? 100;
+
+        $user = $website->user;
+
+        // Define allowed log paths based on application type
+        $allowedLogs = [
+            'nginx-access' => "/home/{$user->username}/logs/nginx-access.log",
+            'nginx-error' => "/home/{$user->username}/logs/nginx-error.log",
+        ];
+
+        if ($website->isPhp()) {
+            $allowedLogs = array_merge($allowedLogs, [
+                'apache-access' => "/home/{$user->username}/logs/apache-access.log",
+                'apache-error' => "/home/{$user->username}/logs/apache-error.log",
+                'php-fpm-error' => "/home/{$user->username}/logs/php-fpm-error.log",
+            ]);
+        } elseif ($website->isNodeJs()) {
+            $allowedLogs = array_merge($allowedLogs, [
+                'pm2-out' => "{$website->websiteRoot}/logs/pm2-out.log",
+                'pm2-error' => "{$website->websiteRoot}/logs/pm2-error.log",
+            ]);
+        }
+
+        if (!isset($allowedLogs[$logName])) {
+            return response()->json(['error' => 'Invalid log file'], 400);
+        }
+
+        $logPath = $allowedLogs[$logName];
+
+        if (!file_exists($logPath)) {
+            return response()->json([
+                'content' => '',
+                'message' => 'Log file does not exist yet',
+            ]);
+        }
+
+        // Read last N lines using tail command
+        $content = shell_exec("tail -n {$lines} " . escapeshellarg($logPath) . " 2>/dev/null");
+
+        return response()->json([
+            'content' => $content ?? '',
+            'log_name' => $logName,
+            'lines' => $lines,
+        ]);
+    }
+
+    /**
+     * Clear a log file for a website
+     */
+    public function clearLog(Request $request, Website $website)
+    {
+        Gate::authorize('update', $website);
+
+        $validated = $request->validate([
+            'log_name' => 'required|string',
+        ]);
+
+        $logName = $validated['log_name'];
+        $user = $website->user;
+
+        // Define allowed log paths
+        $allowedLogs = [
+            'nginx-access' => "/home/{$user->username}/logs/nginx-access.log",
+            'nginx-error' => "/home/{$user->username}/logs/nginx-error.log",
+        ];
+
+        if ($website->isPhp()) {
+            $allowedLogs = array_merge($allowedLogs, [
+                'apache-access' => "/home/{$user->username}/logs/apache-access.log",
+                'apache-error' => "/home/{$user->username}/logs/apache-error.log",
+                'php-fpm-error' => "/home/{$user->username}/logs/php-fpm-error.log",
+            ]);
+        } elseif ($website->isNodeJs()) {
+            $allowedLogs = array_merge($allowedLogs, [
+                'pm2-out' => "{$website->websiteRoot}/logs/pm2-out.log",
+                'pm2-error' => "{$website->websiteRoot}/logs/pm2-error.log",
+            ]);
+        }
+
+        if (!isset($allowedLogs[$logName])) {
+            return response()->json(['error' => 'Invalid log file'], 400);
+        }
+
+        $logPath = $allowedLogs[$logName];
+
+        if (file_exists($logPath)) {
+            file_put_contents($logPath, '');
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Log file cleared successfully',
+        ]);
+    }
+
+    /**
+     * Format file size for display
+     */
+    private function formatLogFileSize(int $bytes): string
+    {
+        if ($bytes >= 1073741824) {
+            return round($bytes / 1073741824, 2) . ' GB';
+        } elseif ($bytes >= 1048576) {
+            return round($bytes / 1048576, 2) . ' MB';
+        } elseif ($bytes >= 1024) {
+            return round($bytes / 1024, 2) . ' KB';
+        }
+        return $bytes . ' B';
+    }
+
     /**
      * Sync all active cron jobs to user's crontab
      */
