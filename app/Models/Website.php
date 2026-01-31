@@ -95,6 +95,14 @@ class Website extends Model
     }
 
     /**
+     * Get the supervisor workers associated with this website.
+     */
+    public function supervisorWorkers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(SupervisorWorker::class);
+    }
+
+    /**
      * Check if this is a PHP application.
      */
     public function isPhp(): bool

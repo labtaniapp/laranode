@@ -10,6 +10,7 @@ import NetworkLive from './Components/NetworkLive';
 import MySQLLive from './Components/MySQLLive';
 import PHPFPMLive from './Components/PHPFPMLive';
 import PM2Live from './Components/PM2Live';
+import SupervisorLive from './Components/SupervisorLive';
 
 
 export default function Dashboard() {
@@ -80,6 +81,7 @@ export default function Dashboard() {
                         <MySQLLive mysqlStats={liveStats.mysql} />
                         <PHPFPMLive phpStats={liveStats.phpFpm} />
                         <PM2Live pm2Stats={liveStats.pm2} />
+                        <SupervisorLive />
                     </div>
 
                 </div>

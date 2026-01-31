@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
-import { TbWorldWww, TbArrowLeft, TbClock, TbInfoCircle, TbDatabase, TbFolder, TbFileText, TbGitBranch, TbCloudUpload } from 'react-icons/tb';
+import { TbWorldWww, TbArrowLeft, TbClock, TbInfoCircle, TbDatabase, TbFolder, TbFileText, TbGitBranch, TbCloudUpload, TbServer } from 'react-icons/tb';
 import { FaPhp, FaNodeJs, FaHtml5 } from 'react-icons/fa';
 import OverviewTab from './Partials/OverviewTab';
 import CronJobsTab from './Partials/CronJobsTab';
@@ -10,8 +10,9 @@ import FileManagerTab from './Partials/FileManagerTab';
 import LogsTab from './Partials/LogsTab';
 import GitTab from './Partials/GitTab';
 import BackupTab from './Partials/BackupTab';
+import WorkersTab from './Partials/WorkersTab';
 
-export default function WebsiteShow({ website, cronJobs, cronTemplates, phpVersions = [], nodeVersions = [], gitRepository = null, backups = [], backupSettings = {} }) {
+export default function WebsiteShow({ website, cronJobs, cronTemplates, phpVersions = [], nodeVersions = [], gitRepository = null, backups = [], backupSettings = {}, workers = [] }) {
     const [activeTab, setActiveTab] = useState('overview');
 
     const tabs = [
@@ -19,6 +20,7 @@ export default function WebsiteShow({ website, cronJobs, cronTemplates, phpVersi
         { id: 'files', label: 'File Manager', icon: TbFolder },
         { id: 'databases', label: 'Databases', icon: TbDatabase, count: website.databases?.length || 0 },
         { id: 'cron', label: 'Cron Jobs', icon: TbClock, count: cronJobs?.length || 0 },
+        { id: 'workers', label: 'Workers', icon: TbServer, count: workers?.length || 0 },
         { id: 'logs', label: 'Logs', icon: TbFileText },
         { id: 'git', label: 'Git Deploy', icon: TbGitBranch, indicator: gitRepository ? 'connected' : null },
         { id: 'backups', label: 'Backups', icon: TbCloudUpload, count: backups?.length || 0 },
@@ -129,6 +131,9 @@ export default function WebsiteShow({ website, cronJobs, cronTemplates, phpVersi
                             cronJobs={cronJobs}
                             templates={cronTemplates}
                         />
+                    )}
+                    {activeTab === 'workers' && (
+                        <WorkersTab website={website} workers={workers} />
                     )}
                     {activeTab === 'logs' && (
                         <LogsTab website={website} />

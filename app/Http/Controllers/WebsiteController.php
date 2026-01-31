@@ -10,6 +10,7 @@ use App\Models\BackupSettings;
 use App\Models\CronJob;
 use App\Models\GitRepository;
 use App\Models\NodeVersion;
+use App\Models\SupervisorWorker;
 use App\Models\Website;
 use App\Models\PhpVersion;
 use App\Services\Websites\CreateWebsiteService;
@@ -129,6 +130,25 @@ class WebsiteController extends Controller
             's3_configured' => $backupSettings->isS3Configured(),
         ];
 
+        // Get supervisor workers for this website
+        $workers = SupervisorWorker::where('website_id', $website->id)
+            ->orderBy('name')
+            ->get()
+            ->map(function ($worker) {
+                return [
+                    'id' => $worker->id,
+                    'name' => $worker->name,
+                    'command' => $worker->command,
+                    'numprocs' => $worker->numprocs,
+                    'autostart' => $worker->autostart,
+                    'autorestart' => $worker->autorestart,
+                    'status' => $worker->status,
+                    'status_color' => $worker->status_color,
+                    'last_started_at' => $worker->last_started_at,
+                    'last_stopped_at' => $worker->last_stopped_at,
+                ];
+            });
+
         return Inertia::render('Websites/Show', compact(
             'website',
             'cronJobs',
@@ -137,7 +157,8 @@ class WebsiteController extends Controller
             'nodeVersions',
             'gitRepository',
             'backups',
-            'backupSettings'
+            'backupSettings',
+            'workers'
         ));
     }
 

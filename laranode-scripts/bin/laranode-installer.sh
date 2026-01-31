@@ -235,7 +235,7 @@ echo "Adding www-data to sudoers and allowing to run laranode scripts"
 echo "--------------------------------------------------------------------------------"
 echo -e "\033[0m"
 
-echo "www-data ALL=(ALL) NOPASSWD: /home/laranode_ln/panel/laranode-scripts/bin/*.sh, /usr/sbin/a2dissite, /bin/rm /etc/apache2/sites-available/*.conf, /usr/sbin/nginx, /bin/systemctl reload nginx, /bin/systemctl restart nginx, /bin/rm /etc/nginx/sites-available/*, /bin/rm /etc/nginx/sites-enabled/*" >> /etc/sudoers
+echo "www-data ALL=(ALL) NOPASSWD: /home/laranode_ln/panel/laranode-scripts/bin/*.sh, /usr/sbin/a2dissite, /bin/rm /etc/apache2/sites-available/*.conf, /usr/sbin/nginx, /bin/systemctl reload nginx, /bin/systemctl restart nginx, /bin/rm /etc/nginx/sites-available/*, /bin/rm /etc/nginx/sites-enabled/*, /usr/bin/supervisorctl, /bin/rm /etc/supervisor/conf.d/laranode/*" >> /etc/sudoers
 
 echo -e "\033[34m"
 echo "--------------------------------------------------------------------------------"
@@ -261,6 +261,19 @@ echo "--------------------------------------------------------------------------
 echo -e "\033[0m"
 
 npm install -g pm2
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Installing Supervisor (Process Manager for PHP workers)"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+apt install -y supervisor
+systemctl enable supervisor
+systemctl start supervisor
+
+# Create directory for Laranode supervisor configs
+mkdir -p /etc/supervisor/conf.d/laranode
 
 echo -e "\033[34m"
 echo "--------------------------------------------------------------------------------"

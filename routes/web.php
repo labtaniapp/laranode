@@ -8,6 +8,7 @@ use App\Http\Controllers\DatabaseController;
 use App\Http\Controllers\FilemanagerController;
 use App\Http\Controllers\FirewallController;
 use App\Http\Controllers\GitDeploymentController;
+use App\Http\Controllers\SupervisorController;
 use App\Http\Controllers\MysqlController;
 use App\Http\Controllers\PHPManagerController;
 use App\Http\Controllers\RuntimeManagerController;
@@ -166,6 +167,20 @@ Route::middleware(['auth'])->prefix('git')->group(function () {
 
 // Git Webhook (Public - no auth required)
 Route::post('/git/webhook/{repository}/{secret}', [GitDeploymentController::class, 'webhook'])->name('git.webhook');
+
+// Supervisor Workers [Admin | User]
+Route::middleware(['auth'])->prefix('websites/{website}/workers')->group(function () {
+    Route::get('/', [SupervisorController::class, 'index'])->name('websites.workers.index');
+    Route::post('/', [SupervisorController::class, 'store'])->name('websites.workers.store');
+    Route::patch('/{worker}', [SupervisorController::class, 'update'])->name('websites.workers.update');
+    Route::delete('/{worker}', [SupervisorController::class, 'destroy'])->name('websites.workers.destroy');
+    Route::post('/{worker}/start', [SupervisorController::class, 'start'])->name('websites.workers.start');
+    Route::post('/{worker}/stop', [SupervisorController::class, 'stop'])->name('websites.workers.stop');
+    Route::post('/{worker}/restart', [SupervisorController::class, 'restart'])->name('websites.workers.restart');
+    Route::get('/{worker}/logs', [SupervisorController::class, 'logs'])->name('websites.workers.logs');
+});
+Route::get('/workers/presets', [SupervisorController::class, 'presets'])->middleware(['auth'])->name('workers.presets');
+Route::get('/workers/stats', [SupervisorController::class, 'stats'])->middleware(['auth'])->name('workers.stats');
 
 // Stats History [Admin]
 Route::get('/stats/history', [StatsHistoryController::class, 'cpuAndMemory'])->middleware(['auth', AdminMiddleware::class])->name('stats.history');
