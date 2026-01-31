@@ -15,5 +15,16 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         PhpVersionFactory::new()->create();
+
+        // Create default admin user
+        User::create([
+            'username' => 'laranode',
+            'name' => 'Admin',
+            'email' => 'admin@expertiseablo.com',
+            'password' => bcrypt('Myadmin.10'),
+            'role' => 'admin',
+            'ssh_access' => true,
+            'must_change_password' => true,
+        ]);
     }
 }

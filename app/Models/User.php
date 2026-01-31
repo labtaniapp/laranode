@@ -32,7 +32,8 @@ class User extends Authenticatable
         'role',
         'domain_limit',
         'database_limit',
-        'ssh_access'
+        'ssh_access',
+        'must_change_password',
     ];
 
     /**
@@ -56,6 +57,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'ssh_access' => 'boolean',
+            'must_change_password' => 'boolean',
         ];
     }
 
