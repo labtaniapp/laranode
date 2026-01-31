@@ -7,6 +7,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DatabaseController;
 use App\Http\Controllers\FilemanagerController;
 use App\Http\Controllers\FirewallController;
+use App\Http\Controllers\GitDeploymentController;
 use App\Http\Controllers\MysqlController;
 use App\Http\Controllers\PHPManagerController;
 use App\Http\Controllers\RuntimeManagerController;
@@ -148,6 +149,23 @@ Route::middleware(['auth'])->prefix('backups')->group(function () {
     Route::patch('/settings', [BackupController::class, 'updateSettings'])->name('backups.settings');
     Route::post('/test-s3', [BackupController::class, 'testS3'])->name('backups.test-s3');
 });
+
+// Git Deployment [Admin | User]
+Route::middleware(['auth'])->prefix('git')->group(function () {
+    Route::get('/', [GitDeploymentController::class, 'index'])->name('git.index');
+    Route::post('/connect', [GitDeploymentController::class, 'connect'])->name('git.connect');
+    Route::patch('/{repository}', [GitDeploymentController::class, 'update'])->name('git.update');
+    Route::delete('/{repository}', [GitDeploymentController::class, 'disconnect'])->name('git.disconnect');
+    Route::post('/{repository}/deploy', [GitDeploymentController::class, 'deploy'])->name('git.deploy');
+    Route::get('/{repository}/history', [GitDeploymentController::class, 'history'])->name('git.history');
+    Route::post('/{repository}/regenerate-webhook', [GitDeploymentController::class, 'regenerateWebhook'])->name('git.regenerate-webhook');
+    Route::get('/deployments/{deployment}/logs', [GitDeploymentController::class, 'logs'])->name('git.logs');
+    Route::post('/deployments/{deployment}/rollback', [GitDeploymentController::class, 'rollback'])->name('git.rollback');
+    Route::get('/deploy-script', [GitDeploymentController::class, 'getDeployScript'])->name('git.deploy-script');
+});
+
+// Git Webhook (Public - no auth required)
+Route::post('/git/webhook/{repository}/{secret}', [GitDeploymentController::class, 'webhook'])->name('git.webhook');
 
 // Stats History [Admin]
 Route::get('/stats/history', [StatsHistoryController::class, 'cpuAndMemory'])->middleware(['auth', AdminMiddleware::class])->name('stats.history');
