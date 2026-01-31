@@ -24,6 +24,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('Myadmin.10'),
             'role' => 'admin',
             'ssh_access' => true,
+            'must_change_password' => true,
         ]);
     }
 }

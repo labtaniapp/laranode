@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AccountsController;
 use App\Http\Controllers\AdminerController;
+use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Http\Controllers\BackupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DatabaseController;
@@ -21,6 +22,12 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect('/dashboard');
+});
+
+// Force Password Change
+Route::middleware(['auth'])->group(function () {
+    Route::get('/password/change', [ForcePasswordChangeController::class, 'show'])->name('password.force-change');
+    Route::post('/password/change', [ForcePasswordChangeController::class, 'update'])->name('password.force-change.update');
 });
 
 // Dashboards [Admin | User]
