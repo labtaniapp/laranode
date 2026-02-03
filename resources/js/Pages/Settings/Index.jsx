@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import { TbSettings, TbWorld, TbClock, TbBug, TbCheck, TbX, TbRefresh } from 'react-icons/tb';
+import { TbSettings, TbWorld, TbClock, TbBug, TbCheck, TbX, TbRefresh, TbDownload } from 'react-icons/tb';
 import { FaLaravel, FaPhp } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -9,8 +9,10 @@ import SecondaryButton from '@/Components/SecondaryButton';
 import TextInput from '@/Components/TextInput';
 import InputLabel from '@/Components/InputLabel';
 import InputError from '@/Components/InputError';
+import UpdatePanel from '@/Components/UpdatePanel';
 
 export default function SettingsIndex({ settings }) {
+    const [activeTab, setActiveTab] = useState('settings');
     const [timezones, setTimezones] = useState({});
     const [loadingTimezones, setLoadingTimezones] = useState(true);
     const [testingUrl, setTestingUrl] = useState(false);
@@ -77,7 +79,38 @@ export default function SettingsIndex({ settings }) {
             <Head title="Settings" />
 
             <div className="max-w-4xl px-4 my-8">
-                {/* System Info */}
+                {/* Tabs */}
+                <div className="border-b border-gray-200 dark:border-gray-700 mb-6">
+                    <nav className="flex space-x-8">
+                        <button
+                            onClick={() => setActiveTab('settings')}
+                            className={`flex items-center py-4 px-1 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                                activeTab === 'settings'
+                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200'
+                            }`}
+                        >
+                            <TbSettings className="w-5 h-5 mr-2" />
+                            Settings
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('updates')}
+                            className={`flex items-center py-4 px-1 text-sm font-medium border-b-2 -mb-px transition-colors ${
+                                activeTab === 'updates'
+                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+                                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200'
+                            }`}
+                        >
+                            <TbDownload className="w-5 h-5 mr-2" />
+                            Updates
+                        </button>
+                    </nav>
+                </div>
+
+                {/* Settings Tab */}
+                {activeTab === 'settings' && (
+                    <>
+                        {/* System Info */}
                 <div className="bg-white dark:bg-gray-850 rounded-lg shadow p-6 mb-6">
                     <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
                         System Information
@@ -256,6 +289,13 @@ export default function SettingsIndex({ settings }) {
                         </PrimaryButton>
                     </div>
                 </form>
+                    </>
+                )}
+
+                {/* Updates Tab */}
+                {activeTab === 'updates' && (
+                    <UpdatePanel />
+                )}
             </div>
         </AuthenticatedLayout>
     );

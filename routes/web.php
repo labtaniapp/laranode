@@ -18,6 +18,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StatsHistoryController;
 use App\Http\Controllers\WebsiteController;
 use App\Http\Controllers\EmailController;
+use App\Http\Controllers\UpdateController;
 use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -261,6 +262,16 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin/settings')->g
     Route::patch('/', [SettingsController::class, 'update'])->name('settings.update');
     Route::get('/timezones', [SettingsController::class, 'getTimezones'])->name('settings.timezones');
     Route::get('/test-url', [SettingsController::class, 'testUrl'])->name('settings.test-url');
+});
+
+// Updates [Admin]
+Route::middleware(['auth', AdminMiddleware::class])->prefix('admin/updates')->group(function () {
+    Route::get('/', [UpdateController::class, 'status'])->name('updates.status');
+    Route::post('/check', [UpdateController::class, 'checkForUpdates'])->name('updates.check');
+    Route::post('/perform', [UpdateController::class, 'performUpdate'])->name('updates.perform');
+    Route::post('/rollback', [UpdateController::class, 'rollback'])->name('updates.rollback');
+    Route::get('/logs', [UpdateController::class, 'getLogs'])->name('updates.logs');
+    Route::get('/system-info', [UpdateController::class, 'systemInfo'])->name('updates.system-info');
 });
 
 // Accounts
