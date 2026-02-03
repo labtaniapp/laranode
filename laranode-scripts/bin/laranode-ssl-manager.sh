@@ -56,12 +56,23 @@ check_domain_accessibility() {
     print_status "Proceeding with SSL generation for $domain"
 }
 
+# Function to check if domain is a root domain (not a subdomain)
+is_root_domain() {
+    local domain=$1
+    # Count the number of dots in the domain
+    local dot_count=$(echo "$domain" | tr -cd '.' | wc -c)
+    # Root domains have exactly 1 dot (e.g., example.com)
+    # Subdomains have more (e.g., app.example.com has 2 dots)
+    [ "$dot_count" -eq 1 ]
+}
+
 # Function to generate SSL certificate
 generate_ssl_certificate() {
     local domain=$1
     local email=$2
     local document_root=$3
     local webroot_path
+    local domains_arg
 
     # Prefer provided document root; fallback to default WEBROOT_PATH
     if [ -n "$document_root" ] && [ -d "$document_root" ]; then
@@ -82,6 +93,14 @@ generate_ssl_certificate() {
     mkdir -p "$webroot_path/.well-known/acme-challenge"
     chmod -R 755 "$webroot_path/.well-known"
 
+    # Build domains argument - include www subdomain for root domains
+    if is_root_domain "$domain"; then
+        domains_arg="-d $domain -d www.$domain"
+        print_status "Including www.$domain in the certificate"
+    else
+        domains_arg="-d $domain"
+    fi
+
     # Generate certificate using certbot with webroot
     if certbot certonly \
         --webroot \
@@ -89,7 +108,7 @@ generate_ssl_certificate() {
         --email "$email" \
         --agree-tos \
         --no-eff-email \
-        --domains "$domain" \
+        $domains_arg \
         --non-interactive; then
         print_status "SSL certificate generated successfully for $domain"
         return 0
