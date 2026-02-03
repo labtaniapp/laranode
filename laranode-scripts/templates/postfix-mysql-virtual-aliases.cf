@@ -1,0 +1,9 @@
+# Postfix MySQL Virtual Aliases
+# Query to get email aliases/forwarding
+
+user = {DB_USER}
+password = {DB_PASSWORD}
+hosts = 127.0.0.1
+dbname = {DB_NAME}
+
+query = SELECT destination_email FROM email_aliases ea JOIN email_domains ed ON ea.email_domain_id = ed.id WHERE ea.source_email='%s' AND ea.active = 1 AND ed.active = 1

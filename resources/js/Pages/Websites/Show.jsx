@@ -1,7 +1,7 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, Link } from '@inertiajs/react';
 import { useState } from 'react';
-import { TbWorldWww, TbArrowLeft, TbClock, TbInfoCircle, TbDatabase, TbFolder, TbFileText, TbGitBranch, TbCloudUpload, TbServer } from 'react-icons/tb';
+import { TbWorldWww, TbArrowLeft, TbClock, TbInfoCircle, TbDatabase, TbFolder, TbFileText, TbGitBranch, TbCloudUpload, TbServer, TbMail, TbLock } from 'react-icons/tb';
 import { FaPhp, FaNodeJs, FaHtml5 } from 'react-icons/fa';
 import OverviewTab from './Partials/OverviewTab';
 import CronJobsTab from './Partials/CronJobsTab';
@@ -11,6 +11,8 @@ import LogsTab from './Partials/LogsTab';
 import GitTab from './Partials/GitTab';
 import BackupTab from './Partials/BackupTab';
 import WorkersTab from './Partials/WorkersTab';
+import EmailTab from './Partials/EmailTab';
+import SSLTab from './Partials/SSLTab';
 
 export default function WebsiteShow({ website, cronJobs, cronTemplates, phpVersions = [], nodeVersions = [], gitRepository = null, backups = [], backupSettings = {}, workers = [] }) {
     const [activeTab, setActiveTab] = useState('overview');
@@ -24,6 +26,8 @@ export default function WebsiteShow({ website, cronJobs, cronTemplates, phpVersi
         { id: 'logs', label: 'Logs', icon: TbFileText },
         { id: 'git', label: 'Git Deploy', icon: TbGitBranch, indicator: gitRepository ? 'connected' : null },
         { id: 'backups', label: 'Backups', icon: TbCloudUpload, count: backups?.length || 0 },
+        { id: 'email', label: 'Email', icon: TbMail },
+        { id: 'ssl', label: 'SSL', icon: TbLock, indicator: website.ssl_enabled ? 'connected' : null },
     ];
 
     const getAppIcon = () => {
@@ -143,6 +147,12 @@ export default function WebsiteShow({ website, cronJobs, cronTemplates, phpVersi
                     )}
                     {activeTab === 'backups' && (
                         <BackupTab website={website} backups={backups} settings={backupSettings} />
+                    )}
+                    {activeTab === 'email' && (
+                        <EmailTab website={website} />
+                    )}
+                    {activeTab === 'ssl' && (
+                        <SSLTab website={website} />
                     )}
                 </div>
             </div>

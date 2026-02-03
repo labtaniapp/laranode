@@ -9,8 +9,10 @@ use App\Actions\Filemanager\GetFileContentsAction;
 use App\Actions\Filemanager\PasteFilesAction;
 use App\Actions\Filemanager\RenameFileAction;
 use App\Actions\Filemanager\UpdateFileContentsAction;
+use App\Listeners\LogAuthenticationEvents;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
@@ -55,6 +57,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Vite::prefetch(concurrency: 3);
+
+        // Register authentication event subscriber for audit logging
+        Event::subscribe(LogAuthenticationEvents::class);
 
         if (Auth::check()) {
             $user = Auth::user();

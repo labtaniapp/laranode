@@ -79,6 +79,24 @@ class CreateWebsiteRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        // Normalize domain: lowercase and remove www. prefix
+        if ($this->has('url')) {
+            $url = strtolower(trim($this->input('url')));
+
+            // Remove www. prefix if present
+            if (str_starts_with($url, 'www.')) {
+                $url = substr($url, 4);
+            }
+
+            // Remove protocol if accidentally included
+            $url = preg_replace('#^https?://#', '', $url);
+
+            // Remove trailing slash
+            $url = rtrim($url, '/');
+
+            $this->merge(['url' => $url]);
+        }
+
         // Set default application type if not provided
         if (!$this->has('application_type')) {
             $this->merge([

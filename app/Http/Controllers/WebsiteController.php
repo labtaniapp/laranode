@@ -270,7 +270,7 @@ class WebsiteController extends Controller
             }
 
             session()->flash('success', $request->enabled ? 'SSL certificate generated successfully' : 'SSL certificate removed successfully');
-            return redirect()->route('websites.index');
+            return redirect()->route('websites.show', $website);
 
         } catch (\Exception $e) {
             session()->flash('error', 'Failed to ' . ($request->enabled ? 'generate' : 'remove') . ' SSL certificate: ' . $e->getMessage());
@@ -288,10 +288,15 @@ class WebsiteController extends Controller
         try {
             $result = (new CheckWebsiteSslStatusAction())->execute($website);
 
+            // Refresh the website model to get latest data
+            $website->refresh();
+
             return response()->json([
                 'success' => true,
                 'ssl_status' => $result['ssl_status'],
                 'ssl_enabled' => $result['ssl_enabled'],
+                'ssl_expires_at' => $website->ssl_expires_at?->toISOString(),
+                'ssl_generated_at' => $website->ssl_generated_at?->toISOString(),
                 'status_text' => $website->getSslStatusText()
             ]);
 

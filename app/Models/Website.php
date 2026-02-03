@@ -103,6 +103,14 @@ class Website extends Model
     }
 
     /**
+     * Get the email domain associated with this website.
+     */
+    public function emailDomain(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(EmailDomain::class);
+    }
+
+    /**
      * Check if this is a PHP application.
      */
     public function isPhp(): bool

@@ -3,6 +3,43 @@
 return [
     /*
     |--------------------------------------------------------------------------
+    | Laranode Version
+    |--------------------------------------------------------------------------
+    |
+    | Current version of the Laranode panel.
+    |
+    */
+    'version' => '1.0.0',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Update Repository
+    |--------------------------------------------------------------------------
+    |
+    | The Git repository URL for checking and pulling updates.
+    |
+    */
+    'repository' => env('LARANODE_REPO', 'https://github.com/labtaniapp/laranode.git'),
+    'branch' => env('LARANODE_BRANCH', 'main'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Update Settings
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for the update system.
+    | For private repositories, set LARANODE_UPDATE_TOKEN in your .env file.
+    |
+    */
+    'update' => [
+        'check_interval' => 3600, // Check every hour (in seconds)
+        'auto_check' => true,
+        'backup_before_update' => true,
+        'token' => env('LARANODE_UPDATE_TOKEN'), // GitHub token for private repos
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Laranode User Manager
     |--------------------------------------------------------------------------
     |

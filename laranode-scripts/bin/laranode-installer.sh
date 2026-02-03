@@ -223,6 +223,17 @@ echo "--------------------------------------------------------------------------
 echo -e "\033[0m"
 apt -y install certbot python3-certbot-apache python3-certbot-nginx
 
+# Setup SSL auto-renewal cron job
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Setting up SSL auto-renewal"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+$LARANODE_PATH/laranode-scripts/bin/laranode-ssl-manager.sh setup-renewal
+
+# Create .well-known directory for ACME challenges
+mkdir -p /var/www/html/.well-known/acme-challenge
+chmod -R 755 /var/www/html/.well-known
 
 echo -e "\033[34m"
 echo "--------------------------------------------------------------------------------"
@@ -287,6 +298,187 @@ mkdir -p /etc/supervisor/conf.d/laranode
 
 echo -e "\033[34m"
 echo "--------------------------------------------------------------------------------"
+echo "Installing Postfix (Mail Transfer Agent)"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+# Pre-configure postfix to avoid interactive prompts
+debconf-set-selections <<< "postfix postfix/mailname string $(hostname -f)"
+debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
+
+apt install -y postfix postfix-mysql
+
+systemctl enable postfix
+systemctl start postfix
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Installing Dovecot (IMAP/POP3 Server)"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+apt install -y dovecot-core dovecot-imapd dovecot-pop3d dovecot-lmtpd dovecot-mysql
+
+systemctl enable dovecot
+systemctl start dovecot
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Creating vmail user for mail storage"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+# Create vmail user and group for virtual mailboxes
+groupadd -g 5000 vmail 2>/dev/null || true
+useradd -g vmail -u 5000 vmail -d /var/vmail -m 2>/dev/null || true
+mkdir -p /var/vmail
+chown -R vmail:vmail /var/vmail
+chmod -R 770 /var/vmail
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Installing OpenDKIM (Email Signing)"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+apt install -y opendkim opendkim-tools
+
+# Create OpenDKIM directories
+mkdir -p /etc/opendkim/keys
+chown -R opendkim:opendkim /etc/opendkim
+chmod 700 /etc/opendkim/keys
+
+systemctl enable opendkim
+systemctl start opendkim
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Installing SpamAssassin (Antispam)"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+apt install -y spamassassin spamc
+
+# Create spamd user
+groupadd spamd 2>/dev/null || true
+useradd -g spamd -s /bin/false -d /var/lib/spamassassin spamd 2>/dev/null || true
+mkdir -p /var/lib/spamassassin
+chown -R spamd:spamd /var/lib/spamassassin
+
+# Enable SpamAssassin service
+sed -i 's/ENABLED=0/ENABLED=1/' /etc/default/spamassassin
+sed -i 's/CRON=0/CRON=1/' /etc/default/spamassassin
+
+# Configure SpamAssassin
+cat > /etc/spamassassin/local.cf << 'SPAMCF'
+# SpamAssassin configuration
+rewrite_header Subject [SPAM]
+report_safe 0
+required_score 5.0
+use_bayes 1
+bayes_auto_learn 1
+skip_rbl_checks 0
+use_razor2 0
+use_pyzor 0
+SPAMCF
+
+systemctl enable spamassassin
+systemctl start spamassassin
+
+# Update SpamAssassin rules
+sa-update || true
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Installing ClamAV (Antivirus)"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+apt install -y clamav clamav-daemon clamav-freshclam
+
+# Stop freshclam temporarily to update database
+systemctl stop clamav-freshclam || true
+
+# Update virus definitions (this may take a while)
+freshclam || true
+
+# Configure ClamAV
+sed -i 's/^Foreground.*/Foreground false/' /etc/clamav/clamd.conf || true
+sed -i 's/^LocalSocket.*/LocalSocket \/var\/run\/clamav\/clamd.ctl/' /etc/clamav/clamd.conf || true
+
+systemctl enable clamav-daemon
+systemctl enable clamav-freshclam
+systemctl start clamav-freshclam
+systemctl start clamav-daemon || true
+
+# Create mail quarantine directory
+mkdir -p /var/quarantine/mail
+chown clamav:clamav /var/quarantine/mail
+chmod 750 /var/quarantine/mail
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Installing Roundcube Webmail"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+# Generate random password for Roundcube database
+ROUNDCUBE_DB_PASS=$(openssl rand -base64 32 | tr -dc 'a-zA-Z0-9' | head -c 24)
+
+# Install Roundcube
+apt install -y roundcube roundcube-mysql roundcube-plugins
+
+# Create Roundcube database and user
+mysql -u root -e "CREATE DATABASE IF NOT EXISTS roundcube CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+mysql -u root -e "CREATE USER IF NOT EXISTS 'roundcube'@'localhost' IDENTIFIED BY '${ROUNDCUBE_DB_PASS}';"
+mysql -u root -e "GRANT ALL PRIVILEGES ON roundcube.* TO 'roundcube'@'localhost';"
+mysql -u root -e "FLUSH PRIVILEGES;"
+
+# Import Roundcube schema
+mysql -u roundcube -p"${ROUNDCUBE_DB_PASS}" roundcube < /usr/share/roundcube/SQL/mysql.initial.sql 2>/dev/null || true
+
+# Configure Roundcube
+cat > /etc/roundcube/config.inc.php << RCCONFIG
+<?php
+\$config['db_dsnw'] = 'mysql://roundcube:${ROUNDCUBE_DB_PASS}@localhost/roundcube';
+\$config['imap_host'] = 'localhost:143';
+\$config['smtp_host'] = 'localhost:587';
+\$config['smtp_user'] = '%u';
+\$config['smtp_pass'] = '%p';
+\$config['support_url'] = '';
+\$config['product_name'] = 'Webmail';
+\$config['skin'] = 'elastic';
+\$config['plugins'] = ['archive', 'zipdownload', 'managesieve', 'password'];
+\$config['session_lifetime'] = 30;
+\$config['force_https'] = true;
+\$config['use_https'] = true;
+\$config['login_autocomplete'] = 0;
+\$config['ip_check'] = true;
+\$config['des_key'] = '$(openssl rand -base64 24)';
+RCCONFIG
+
+# Create Apache configuration for Roundcube
+cat > /etc/apache2/conf-available/roundcube.conf << 'RCAPACHE'
+Alias /webmail /var/lib/roundcube/public_html
+
+<Directory /var/lib/roundcube/public_html>
+    Options +FollowSymLinks
+    AllowOverride All
+    Require all granted
+</Directory>
+
+<Directory /var/lib/roundcube/config>
+    Options -FollowSymLinks
+    AllowOverride None
+    Require all denied
+</Directory>
+RCAPACHE
+
+a2enconf roundcube
+systemctl reload apache2
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
 echo "Creating Laranode User"
 useradd -m -s /bin/bash laranode_ln
 usermod -aG laranode_ln www-data
@@ -347,13 +539,19 @@ cp /home/laranode_ln/panel/laranode-scripts/templates/laranode-reverb.service /e
 
 echo -e"\033[34m"
 echo "--------------------------------------------------------------------------------"
-echo "Adding default UFW rules for SSH | HTTP | HTTPS | REVERB WEBSOCKETS"
+echo "Adding default UFW rules for SSH | HTTP | HTTPS | REVERB | MAIL"
 echo "--------------------------------------------------------------------------------"
 echo -e "\033[0m"
 ufw allow 22
 ufw allow 80
 ufw allow 443
 ufw allow 8080
+# Mail ports
+ufw allow 25    # SMTP
+ufw allow 465   # SMTPS
+ufw allow 587   # Submission
+ufw allow 993   # IMAPS
+ufw allow 995   # POP3S
 
 
 echo -e "\033[34m"
