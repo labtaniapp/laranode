@@ -218,6 +218,40 @@ Route::middleware(['auth'])->prefix('email/relay')->group(function () {
     Route::post('/test', [EmailController::class, 'testRelay'])->name('email.relay.test');
 });
 
+// Email Statistics & Logs
+Route::middleware(['auth'])->group(function () {
+    Route::get('/websites/{website}/email/stats', [EmailController::class, 'getStats'])->name('websites.email.stats');
+    Route::get('/websites/{website}/email/logs', [EmailController::class, 'getLogs'])->name('websites.email.logs');
+});
+
+// Email Security Settings (Spam/Antivirus)
+Route::middleware(['auth'])->prefix('websites/{website}/email/security')->group(function () {
+    Route::get('/', [EmailController::class, 'getSecuritySettings'])->name('websites.email.security.index');
+    Route::patch('/', [EmailController::class, 'updateSecuritySettings'])->name('websites.email.security.update');
+    Route::post('/whitelist', [EmailController::class, 'addToWhitelist'])->name('websites.email.security.whitelist.add');
+    Route::delete('/whitelist', [EmailController::class, 'removeFromWhitelist'])->name('websites.email.security.whitelist.remove');
+    Route::post('/blacklist', [EmailController::class, 'addToBlacklist'])->name('websites.email.security.blacklist.add');
+    Route::delete('/blacklist', [EmailController::class, 'removeFromBlacklist'])->name('websites.email.security.blacklist.remove');
+    Route::post('/train', [EmailController::class, 'trainSpam'])->name('websites.email.security.train');
+});
+
+// Email Quarantine
+Route::middleware(['auth'])->group(function () {
+    Route::get('/websites/{website}/email/quarantine', [EmailController::class, 'getQuarantine'])->name('websites.email.quarantine.index');
+    Route::post('/email/quarantine/{quarantine}/release', [EmailController::class, 'releaseQuarantine'])->name('email.quarantine.release');
+    Route::delete('/email/quarantine/{quarantine}', [EmailController::class, 'deleteQuarantine'])->name('email.quarantine.destroy');
+    Route::get('/email/quarantine/{quarantine}/preview', [EmailController::class, 'previewQuarantine'])->name('email.quarantine.preview');
+});
+
+// Webmail Settings [Admin]
+Route::middleware(['auth', AdminMiddleware::class])->prefix('admin/webmail')->group(function () {
+    Route::get('/', [EmailController::class, 'getWebmailSettings'])->name('webmail.settings.index');
+    Route::patch('/', [EmailController::class, 'updateWebmailSettings'])->name('webmail.settings.update');
+});
+
+// Webmail URL for domain
+Route::get('/websites/{website}/email/webmail-url', [EmailController::class, 'getWebmailUrl'])->middleware(['auth'])->name('websites.email.webmail-url');
+
 // Stats History [Admin]
 Route::get('/stats/history', [StatsHistoryController::class, 'cpuAndMemory'])->middleware(['auth', AdminMiddleware::class])->name('stats.history');
 
