@@ -28,12 +28,14 @@ return [
     |--------------------------------------------------------------------------
     |
     | Configuration for the update system.
+    | For private repositories, set LARANODE_UPDATE_TOKEN in your .env file.
     |
     */
     'update' => [
         'check_interval' => 3600, // Check every hour (in seconds)
         'auto_check' => true,
         'backup_before_update' => true,
+        'token' => env('LARANODE_UPDATE_TOKEN'), // GitHub token for private repos
     ],
 
     /*

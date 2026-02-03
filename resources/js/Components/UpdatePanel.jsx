@@ -214,6 +214,43 @@ export default function UpdatePanel() {
                         </div>
                     </div>
                 )}
+
+                {/* Private Repo Warning */}
+                {status?.uses_https && !status?.token_configured && (
+                    <div className="mt-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                        <div className="flex items-start">
+                            <TbAlertTriangle className="w-5 h-5 text-yellow-600 mr-3 mt-0.5" />
+                            <div>
+                                <p className="font-medium text-yellow-900 dark:text-yellow-100">
+                                    Private Repository?
+                                </p>
+                                <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
+                                    If your repository is private, add a GitHub Personal Access Token to your <code className="bg-yellow-100 dark:bg-yellow-800 px-1 rounded">.env</code> file:
+                                </p>
+                                <code className="block mt-2 text-xs bg-yellow-100 dark:bg-yellow-800 p-2 rounded">
+                                    LARANODE_UPDATE_TOKEN=github_pat_xxxx
+                                </code>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* SSH Authentication */}
+                {status?.uses_ssh && (
+                    <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                        <div className="flex items-center">
+                            <TbCheck className="w-5 h-5 text-blue-600 mr-3" />
+                            <div>
+                                <p className="font-medium text-blue-900 dark:text-blue-100">
+                                    Using SSH Authentication
+                                </p>
+                                <p className="text-sm text-blue-700 dark:text-blue-300">
+                                    Your repository uses SSH. Ensure your SSH key is properly configured.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* System Information */}

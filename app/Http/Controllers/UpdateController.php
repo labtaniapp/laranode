@@ -12,11 +12,75 @@ class UpdateController extends Controller
 {
     protected string $panelPath;
     protected string $branch;
+    protected ?string $token;
 
     public function __construct()
     {
         $this->panelPath = base_path();
         $this->branch = config('laranode.branch', 'main');
+        $this->token = config('laranode.update.token');
+    }
+
+    /**
+     * Configure git credentials for private repos.
+     */
+    protected function configureGitAuth(): void
+    {
+        if (!$this->token) {
+            return;
+        }
+
+        // Get current remote URL
+        $remoteResult = Process::path($this->panelPath)
+            ->run('git remote get-url origin');
+
+        $currentUrl = trim($remoteResult->output());
+
+        // Only modify HTTPS URLs
+        if (str_starts_with($currentUrl, 'https://')) {
+            // Check if token already in URL
+            if (str_contains($currentUrl, '@')) {
+                return;
+            }
+
+            // Add token to URL: https://TOKEN@github.com/...
+            $authenticatedUrl = preg_replace(
+                '#^https://#',
+                "https://{$this->token}@",
+                $currentUrl
+            );
+
+            // Temporarily set the authenticated URL
+            Process::path($this->panelPath)
+                ->run("git remote set-url origin '{$authenticatedUrl}'");
+        }
+    }
+
+    /**
+     * Restore original git remote URL (without token).
+     */
+    protected function restoreGitUrl(): void
+    {
+        if (!$this->token) {
+            return;
+        }
+
+        $remoteResult = Process::path($this->panelPath)
+            ->run('git remote get-url origin');
+
+        $currentUrl = trim($remoteResult->output());
+
+        // Remove token from URL if present
+        $cleanUrl = preg_replace(
+            '#^https://[^@]+@#',
+            'https://',
+            $currentUrl
+        );
+
+        if ($cleanUrl !== $currentUrl) {
+            Process::path($this->panelPath)
+                ->run("git remote set-url origin '{$cleanUrl}'");
+        }
     }
 
     /**
@@ -30,6 +94,13 @@ class UpdateController extends Controller
         $latestVersion = Cache::get('laranode_latest_version', $currentVersion);
         $changelog = Cache::get('laranode_changelog', []);
 
+        // Check if repo uses SSH or HTTPS
+        $remoteResult = Process::path($this->panelPath)
+            ->run('git remote get-url origin 2>/dev/null');
+        $remoteUrl = trim($remoteResult->output());
+        $usesHttps = str_starts_with($remoteUrl, 'https://');
+        $usesSsh = str_starts_with($remoteUrl, 'git@');
+
         return response()->json([
             'current_version' => $currentVersion,
             'latest_version' => $latestVersion,
@@ -37,6 +108,10 @@ class UpdateController extends Controller
             'last_check' => $lastCheck,
             'changelog' => $changelog,
             'branch' => $this->branch,
+            'auth_configured' => $usesSsh || !empty($this->token),
+            'uses_https' => $usesHttps,
+            'uses_ssh' => $usesSsh,
+            'token_configured' => !empty($this->token),
         ]);
     }
 
@@ -46,10 +121,16 @@ class UpdateController extends Controller
     public function checkForUpdates()
     {
         try {
+            // Configure authentication for private repos
+            $this->configureGitAuth();
+
             // Fetch latest from remote
             $result = Process::path($this->panelPath)
                 ->timeout(60)
                 ->run("git fetch origin {$this->branch}");
+
+            // Restore clean URL (without token)
+            $this->restoreGitUrl();
 
             if (!$result->successful()) {
                 return response()->json([
@@ -159,10 +240,16 @@ class UpdateController extends Controller
             // Enable maintenance mode
             Process::path($this->panelPath)->run('php artisan down --refresh=15');
 
+            // Configure authentication for private repos
+            $this->configureGitAuth();
+
             // Pull latest changes
             $pullResult = Process::path($this->panelPath)
                 ->timeout(300)
                 ->run("git pull origin {$this->branch}");
+
+            // Restore clean URL (without token)
+            $this->restoreGitUrl();
 
             if (!$pullResult->successful()) {
                 // Disable maintenance mode on failure
