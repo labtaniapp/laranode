@@ -223,6 +223,17 @@ echo "--------------------------------------------------------------------------
 echo -e "\033[0m"
 apt -y install certbot python3-certbot-apache python3-certbot-nginx
 
+# Setup SSL auto-renewal cron job
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Setting up SSL auto-renewal"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+$LARANODE_PATH/laranode-scripts/bin/laranode-ssl-manager.sh setup-renewal
+
+# Create .well-known directory for ACME challenges
+mkdir -p /var/www/html/.well-known/acme-challenge
+chmod -R 755 /var/www/html/.well-known
 
 echo -e "\033[34m"
 echo "--------------------------------------------------------------------------------"
