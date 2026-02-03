@@ -19,6 +19,9 @@ use App\Http\Controllers\StatsHistoryController;
 use App\Http\Controllers\WebsiteController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\UpdateController;
+use App\Http\Controllers\TwoFactorController;
+use App\Http\Controllers\ActivityLogController;
+use App\Http\Controllers\IpRestrictionController;
 use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -30,6 +33,21 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/password/change', [ForcePasswordChangeController::class, 'show'])->name('password.force-change');
     Route::post('/password/change', [ForcePasswordChangeController::class, 'update'])->name('password.force-change.update');
+});
+
+// Two-Factor Authentication
+Route::prefix('two-factor')->group(function () {
+    // Challenge page (no auth - user is in 2FA limbo)
+    Route::get('/challenge', [TwoFactorController::class, 'challenge'])->name('two-factor.challenge');
+    Route::post('/verify', [TwoFactorController::class, 'verify'])->name('two-factor.verify');
+
+    // 2FA management (requires full auth)
+    Route::middleware(['auth'])->group(function () {
+        Route::post('/enable', [TwoFactorController::class, 'enable'])->name('two-factor.enable');
+        Route::post('/confirm', [TwoFactorController::class, 'confirm'])->name('two-factor.confirm');
+        Route::post('/disable', [TwoFactorController::class, 'disable'])->name('two-factor.disable');
+        Route::post('/recovery-codes', [TwoFactorController::class, 'regenerateRecoveryCodes'])->name('two-factor.recovery-codes');
+    });
 });
 
 // Dashboards [Admin | User]
@@ -273,6 +291,36 @@ Route::middleware(['auth', AdminMiddleware::class])->prefix('admin/updates')->gr
     Route::get('/logs', [UpdateController::class, 'getLogs'])->name('updates.logs');
     Route::get('/system-info', [UpdateController::class, 'systemInfo'])->name('updates.system-info');
 });
+
+// Activity Logs [Admin]
+Route::middleware(['auth', AdminMiddleware::class])->prefix('admin/activity-logs')->group(function () {
+    Route::get('/', [ActivityLogController::class, 'index'])->name('activity-logs.index');
+    Route::get('/list', [ActivityLogController::class, 'list'])->name('activity-logs.list');
+    Route::get('/security', [ActivityLogController::class, 'security'])->name('activity-logs.security');
+    Route::get('/stats', [ActivityLogController::class, 'stats'])->name('activity-logs.stats');
+    Route::get('/export', [ActivityLogController::class, 'export'])->name('activity-logs.export');
+    Route::post('/cleanup', [ActivityLogController::class, 'cleanup'])->name('activity-logs.cleanup');
+});
+
+// Login History (User)
+Route::get('/activity-logs/login-history', [ActivityLogController::class, 'loginHistory'])
+    ->middleware(['auth'])
+    ->name('activity-logs.login-history');
+
+// IP Restrictions [Admin]
+Route::middleware(['auth', AdminMiddleware::class])->prefix('admin/ip-restrictions')->group(function () {
+    Route::get('/', [IpRestrictionController::class, 'index'])->name('ip-restrictions.index');
+    Route::get('/list', [IpRestrictionController::class, 'list'])->name('ip-restrictions.list');
+    Route::post('/', [IpRestrictionController::class, 'store'])->name('ip-restrictions.store');
+    Route::patch('/{restriction}', [IpRestrictionController::class, 'update'])->name('ip-restrictions.update');
+    Route::delete('/{restriction}', [IpRestrictionController::class, 'destroy'])->name('ip-restrictions.destroy');
+    Route::get('/stats', [IpRestrictionController::class, 'stats'])->name('ip-restrictions.stats');
+    Route::post('/quick-block', [IpRestrictionController::class, 'quickBlock'])->name('ip-restrictions.quick-block');
+    Route::post('/clear-logs', [IpRestrictionController::class, 'clearLogs'])->name('ip-restrictions.clear-logs');
+});
+Route::get('/ip-restrictions/check-my-ip', [IpRestrictionController::class, 'checkMyIp'])
+    ->middleware(['auth'])
+    ->name('ip-restrictions.check-my-ip');
 
 // Accounts
 Route::middleware('auth')->group(function () {
