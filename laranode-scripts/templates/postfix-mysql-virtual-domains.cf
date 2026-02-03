@@ -1,0 +1,9 @@
+# Postfix MySQL Virtual Domains
+# Query to get list of virtual domains
+
+user = {DB_USER}
+password = {DB_PASSWORD}
+hosts = 127.0.0.1
+dbname = {DB_NAME}
+
+query = SELECT domain FROM email_domains WHERE domain='%s' AND active = 1

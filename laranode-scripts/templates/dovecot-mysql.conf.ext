@@ -1,0 +1,13 @@
+# Dovecot MySQL Configuration for Virtual Users
+
+driver = mysql
+connect = host=127.0.0.1 dbname={DB_NAME} user={DB_USER} password={DB_PASSWORD}
+
+# Password query
+password_query = SELECT ea.email as user, ea.password, '/var/vmail/%d/%n' as userdb_home, 'maildir:/var/vmail/%d/%n' as userdb_mail, 5000 as userdb_uid, 5000 as userdb_gid FROM email_accounts ea JOIN email_domains ed ON ea.email_domain_id = ed.id WHERE ea.email='%u' AND ea.active = 1 AND ed.active = 1
+
+# User query
+user_query = SELECT '/var/vmail/%d/%n' as home, 'maildir:/var/vmail/%d/%n' as mail, 5000 AS uid, 5000 AS gid, CONCAT('*:bytes=', ea.quota) as quota_rule FROM email_accounts ea JOIN email_domains ed ON ea.email_domain_id = ed.id WHERE ea.email='%u' AND ea.active = 1 AND ed.active = 1
+
+# Iterate query (for quota warnings, etc.)
+iterate_query = SELECT ea.email as user FROM email_accounts ea JOIN email_domains ed ON ea.email_domain_id = ed.id WHERE ea.active = 1 AND ed.active = 1

@@ -1,0 +1,9 @@
+# Postfix MySQL Virtual Mailboxes
+# Query to get mailbox location
+
+user = {DB_USER}
+password = {DB_PASSWORD}
+hosts = 127.0.0.1
+dbname = {DB_NAME}
+
+query = SELECT CONCAT(ed.domain, '/', ea.local_part, '/') FROM email_accounts ea JOIN email_domains ed ON ea.email_domain_id = ed.id WHERE ea.email='%s' AND ea.active = 1 AND ed.active = 1

@@ -287,6 +287,61 @@ mkdir -p /etc/supervisor/conf.d/laranode
 
 echo -e "\033[34m"
 echo "--------------------------------------------------------------------------------"
+echo "Installing Postfix (Mail Transfer Agent)"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+# Pre-configure postfix to avoid interactive prompts
+debconf-set-selections <<< "postfix postfix/mailname string $(hostname -f)"
+debconf-set-selections <<< "postfix postfix/main_mailer_type string 'Internet Site'"
+
+apt install -y postfix postfix-mysql
+
+systemctl enable postfix
+systemctl start postfix
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Installing Dovecot (IMAP/POP3 Server)"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+apt install -y dovecot-core dovecot-imapd dovecot-pop3d dovecot-lmtpd dovecot-mysql
+
+systemctl enable dovecot
+systemctl start dovecot
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Creating vmail user for mail storage"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+# Create vmail user and group for virtual mailboxes
+groupadd -g 5000 vmail 2>/dev/null || true
+useradd -g vmail -u 5000 vmail -d /var/vmail -m 2>/dev/null || true
+mkdir -p /var/vmail
+chown -R vmail:vmail /var/vmail
+chmod -R 770 /var/vmail
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
+echo "Installing OpenDKIM (Email Signing)"
+echo "--------------------------------------------------------------------------------"
+echo -e "\033[0m"
+
+apt install -y opendkim opendkim-tools
+
+# Create OpenDKIM directories
+mkdir -p /etc/opendkim/keys
+chown -R opendkim:opendkim /etc/opendkim
+chmod 700 /etc/opendkim/keys
+
+systemctl enable opendkim
+systemctl start opendkim
+
+echo -e "\033[34m"
+echo "--------------------------------------------------------------------------------"
 echo "Creating Laranode User"
 useradd -m -s /bin/bash laranode_ln
 usermod -aG laranode_ln www-data
@@ -347,13 +402,19 @@ cp /home/laranode_ln/panel/laranode-scripts/templates/laranode-reverb.service /e
 
 echo -e"\033[34m"
 echo "--------------------------------------------------------------------------------"
-echo "Adding default UFW rules for SSH | HTTP | HTTPS | REVERB WEBSOCKETS"
+echo "Adding default UFW rules for SSH | HTTP | HTTPS | REVERB | MAIL"
 echo "--------------------------------------------------------------------------------"
 echo -e "\033[0m"
 ufw allow 22
 ufw allow 80
 ufw allow 443
 ufw allow 8080
+# Mail ports
+ufw allow 25    # SMTP
+ufw allow 465   # SMTPS
+ufw allow 587   # Submission
+ufw allow 993   # IMAPS
+ufw allow 995   # POP3S
 
 
 echo -e "\033[34m"

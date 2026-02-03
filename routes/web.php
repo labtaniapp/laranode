@@ -17,6 +17,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StatsHistoryController;
 use App\Http\Controllers\WebsiteController;
+use App\Http\Controllers\EmailController;
 use App\Http\Middleware\AdminMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -188,6 +189,34 @@ Route::middleware(['auth'])->prefix('websites/{website}/workers')->group(functio
 });
 Route::get('/workers/presets', [SupervisorController::class, 'presets'])->middleware(['auth'])->name('workers.presets');
 Route::get('/workers/stats', [SupervisorController::class, 'stats'])->middleware(['auth'])->name('workers.stats');
+
+// Email [Admin | User]
+Route::middleware(['auth'])->prefix('websites/{website}/email')->group(function () {
+    Route::get('/', [EmailController::class, 'index'])->name('websites.email.index');
+    Route::post('/enable', [EmailController::class, 'enableDomain'])->name('websites.email.enable');
+    Route::post('/disable', [EmailController::class, 'disableDomain'])->name('websites.email.disable');
+    Route::post('/regenerate-dkim', [EmailController::class, 'regenerateDkim'])->name('websites.email.regenerate-dkim');
+});
+
+// Email Accounts
+Route::middleware(['auth'])->group(function () {
+    Route::post('/websites/{website}/email/accounts', [EmailController::class, 'createAccount'])->name('websites.email.accounts.store');
+    Route::patch('/email/accounts/{account}', [EmailController::class, 'updateAccount'])->name('websites.email.accounts.update');
+    Route::delete('/email/accounts/{account}', [EmailController::class, 'deleteAccount'])->name('websites.email.accounts.destroy');
+});
+
+// Email Aliases
+Route::middleware(['auth'])->group(function () {
+    Route::post('/websites/{website}/email/aliases', [EmailController::class, 'createAlias'])->name('websites.email.aliases.store');
+    Route::delete('/email/aliases/{alias}', [EmailController::class, 'deleteAlias'])->name('websites.email.aliases.destroy');
+});
+
+// Email Relay Settings
+Route::middleware(['auth'])->prefix('email/relay')->group(function () {
+    Route::get('/', [EmailController::class, 'getRelaySettings'])->name('email.relay.index');
+    Route::patch('/', [EmailController::class, 'updateRelaySettings'])->name('email.relay.update');
+    Route::post('/test', [EmailController::class, 'testRelay'])->name('email.relay.test');
+});
 
 // Stats History [Admin]
 Route::get('/stats/history', [StatsHistoryController::class, 'cpuAndMemory'])->middleware(['auth', AdminMiddleware::class])->name('stats.history');
