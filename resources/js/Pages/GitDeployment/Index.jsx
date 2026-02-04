@@ -680,7 +680,7 @@ npm run build"
                                                 onClick={() => openLogsModal(deployment.id)}
                                                 className="text-sm text-indigo-600 hover:text-indigo-800 dark:text-indigo-400"
                                             >
-                                                <TbTerminal2 className="w-4 h-4" />
+                                                <TbTerminal  className="w-4 h-4" />
                                             </button>
                                             {deployment.can_rollback && (
                                                 <ConfirmationButton doAction={() => handleRollback(deployment.id)}>
@@ -738,7 +738,7 @@ npm run build"
             <Modal show={showLogsModal} onClose={() => setShowLogsModal(false)} maxWidth="3xl">
                 <div className="p-6">
                     <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 flex items-center mb-4">
-                        <TbTerminal2 className="mr-2" />
+                        <TbTerminal  className="mr-2" />
                         Deployment Logs
                     </h2>
 
