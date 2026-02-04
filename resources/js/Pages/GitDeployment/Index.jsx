@@ -1,8 +1,9 @@
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout';
 import { Head, useForm, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import { FaGithub, FaGitlab, FaBitbucket, FaGit, FaLaravel, FaNodeJs, FaNuxt } from 'react-icons/fa';
-import { SiNextdotjs } from 'react-icons/si';
+import { FaGithub, FaGitlab, FaBitbucket, FaGit, FaLaravel, FaNodeJs } from 'react-icons/fa';
+
+import { SiNextdotjs, SiNuxtdotjs } from 'react-icons/si';
 import { TbGitBranch, TbRocket, TbHistory, TbSettings, TbRefresh, TbPlus, TbLink, TbLinkOff, TbWebhook, TbCopy, TbTerminal, TbArrowLeft } from 'react-icons/tb';
 import { toast } from 'react-toastify';
 import Modal from '@/Components/Modal';
@@ -27,7 +28,7 @@ const FrameworkIcon = ({ framework, className = "w-5 h-5" }) => {
     switch (framework) {
         case 'laravel': return <FaLaravel className={`${className} text-red-500`} />;
         case 'nodejs': return <FaNodeJs className={`${className} text-green-500`} />;
-        case 'nuxt': return <FaNuxt className={`${className} text-green-400`} />;
+        case 'nuxt': return <SiNuxtdotjs  className={`${className} text-green-400`} />;
         case 'nextjs': return <SiNextdotjs className={className} />;
         default: return <TbTerminal className={className} />;
     }
