@@ -505,7 +505,7 @@ composer install
 cp .env.example .env
 sed -i "s#DB_PASSWORD=.*#DB_PASSWORD=\"$LARANODE_RANDOM_PASS\"#" ".env"
 sed -i "s#PG_PASSWORD=.*#PG_PASSWORD=\"$POSTGRES_RANDOM_PASS\"#" ".env"
-sed -i "s#APP_URL=.*#APP_URL=\"http://$(curl icanhazip.com)\"#" ".env"
+sed -i "s#APP_URL=.*#APP_URL=\"http://$(curl -4 icanhazip.com)\"#" ".env"
 
 php artisan key:generate
 php artisan migrate
@@ -513,8 +513,8 @@ php artisan db:seed
 php artisan storage:link
 php artisan reverb:install
 
-sed -i "s#VITE_REVERB_HOST=.*#VITE_REVERB_HOST=$(curl icanhazip.com)#" ".env"
-sed -i "s#REVERB_HOST=.*#REVERB_HOST=$(curl icanhazip.com)#" ".env"
+sed -i "s#VITE_REVERB_HOST=.*#VITE_REVERB_HOST=$(curl -4 icanhazip.com)#" ".env"
+sed -i "s#REVERB_HOST=.*#REVERB_HOST=$(curl -4 icanhazip.com)#" ".env"
 
 cp /home/laranode_ln/panel/laranode-scripts/templates/apache2-default.template /etc/apache2/sites-available/000-default.conf
 
