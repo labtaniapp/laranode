@@ -1,6 +1,6 @@
 import { useForm, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
-import { TbServer, TbPlus, TbPlayerPlay, TbPlayerStop, TbRefresh, TbTrash, TbSettings, TbTerminal2, TbFileText } from 'react-icons/tb';
+import { TbServer, TbPlus, TbPlayerPlay, TbPlayerStop, TbRefresh, TbTrash, TbSettings, TbTerminal, TbFileText } from 'react-icons/tb';
 import { toast } from 'react-toastify';
 import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -320,7 +320,7 @@ export default function WorkersTab({ website, workers: initialWorkers = [] }) {
                                             className="p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 rounded"
                                             title="View Logs"
                                         >
-                                            <TbTerminal2 className="w-4 h-4" />
+                                            <TbTerminal className="w-4 h-4" />
                                         </button>
                                         <button
                                             onClick={() => openEditModal(worker)}
@@ -537,7 +537,7 @@ export default function WorkersTab({ website, workers: initialWorkers = [] }) {
                 <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
                         <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 flex items-center">
-                            <TbTerminal2 className="mr-2" />
+                            <TbTerminal className="mr-2" />
                             Worker Logs: {editingWorker?.name}
                         </h2>
                         <div className="flex items-center space-x-2">
