@@ -688,7 +688,7 @@ npm run build"
                                                         className="text-sm text-orange-600 hover:text-orange-800 dark:text-orange-400"
                                                         title="Rollback to this version"
                                                     >
-                                                        <TbArrowBack className="w-4 h-4" />
+                                                        <TbArrowLeft  className="w-4 h-4" />
                                                     </button>
                                                 </ConfirmationButton>
                                             )}
