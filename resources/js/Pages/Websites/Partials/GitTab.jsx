@@ -2,7 +2,7 @@ import { useForm, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import { FaGithub, FaGitlab, FaBitbucket, FaGit, FaLaravel, FaNodeJs } from 'react-icons/fa';
 import { SiNextdotjs } from 'react-icons/si';
-import { TbGitBranch, TbRocket, TbHistory, TbSettings, TbRefresh, TbLink, TbLinkOff, TbWebhook, TbCopy, TbTerminal2, TbArrowBack } from 'react-icons/tb';
+import { TbGitBranch, TbRocket, TbHistory, TbSettings, TbRefresh, TbLink, TbLinkOff, TbWebhook, TbCopy, TbTerminal, TbArrowBack } from 'react-icons/tb';
 import { toast } from 'react-toastify';
 import Modal from '@/Components/Modal';
 import PrimaryButton from '@/Components/PrimaryButton';
@@ -28,7 +28,7 @@ const FrameworkIcon = ({ framework, className = "w-5 h-5" }) => {
         case 'nodejs': return <FaNodeJs className={`${className} text-green-500`} />;
         case 'nuxt': return <FaNodeJs className={`${className} text-green-400`} />;
         case 'nextjs': return <SiNextdotjs className={className} />;
-        default: return <TbTerminal2 className={className} />;
+        default: return <TbTerminal className={className} />;
     }
 };
 
@@ -525,7 +525,7 @@ export default function GitTab({ website, gitRepository, frameworks = {} }) {
                                         </div>
                                         <div className="flex items-center space-x-2">
                                             <button onClick={() => openLogsModal(deployment.id)} className="text-indigo-600 hover:text-indigo-800 dark:text-indigo-400">
-                                                <TbTerminal2 className="w-4 h-4" />
+                                                <TbTerminal className="w-4 h-4" />
                                             </button>
                                             {deployment.can_rollback && (
                                                 <ConfirmationButton doAction={() => handleRollback(deployment.id)}>
@@ -561,7 +561,7 @@ export default function GitTab({ website, gitRepository, frameworks = {} }) {
             <Modal show={showLogsModal} onClose={() => setShowLogsModal(false)} maxWidth="3xl">
                 <div className="p-6">
                     <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100 flex items-center mb-4">
-                        <TbTerminal2 className="mr-2" />
+                        <TbTerminal className="mr-2" />
                         Deployment Logs
                     </h2>
 
